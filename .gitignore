@@ -1,0 +1,12 @@
+# my directories
+build/
+workdir/
+
+# C extensions
+*.so
+
+# emacs
+*.*~
+
+# python compiled
+*.pyc
