@@ -21,7 +21,7 @@
 // - Falaise:
 
 // This project:
-// #include <fitter_library.h>
+#include <fitter_library.h>
 
 /// \brief Tracker consolidation module for fitted clusters
 class fitter_module : public dpp::base_module
