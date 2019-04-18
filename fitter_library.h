@@ -32,24 +32,76 @@ struct LineFit {
   int status;
 };
 
-// function Object to be minimized
-/* struct LineDistance2 { */
-/*   // data member */
-/*   SNFitter* snf; */
+// helix fit store, 5 parameter with errors
+struct HelixFit {
+  // par
+  double radius;
+  double pitch;
+  double xc;
+  double yc;
+  double zc;
+  double raderr;
+  double errpitch;
+  double errxc;
+  double erryc;
+  double errzc;
+  // fit diagnostics
+  double chi2;
+  double prob;
+  int status;
+};
 
-/*   LineDistance2(SNFitter * snfitter) : snf(snfitter) {} */
+
+// function Object to be minimized
+class LineDistance2 {
+  // data member
+ private:
+  std::vector<GeigerRing>* frings;
   
-/*   // implementation of the function to be minimized */
-/*   double operator() (const double * par) { */
-/*     double sum = 0; */
-/*     for (GeigerRing entry : *snf->allRings()) { */
-/*       double d = snf->linedistance(entry, par); */
-/*       sum += d*d; // squared weighted distance */
-/*     } */
-/*     return sum; */
-/*   } */
+ protected: 
+  double linedistance(GeigerRing gr, const double *p); // calculate distance line-cylinder
   
-/* }; */
+ public:
+ LineDistance2(std::vector<GeigerRing> * g) : frings(g) { }
+  ~Linedistance2() { }
+  
+  // implementation of the function to be minimized
+  double operator() (const double * par) {
+    double sum = 0.0;
+    for (GeigerRing entry : *frings) {
+      double d = linedistance(entry, par);
+      sum += d*d; // squared weighted distance
+    }
+    return sum;
+  }
+  
+};
+
+
+// function Object to be minimized
+class HelixDistance2 {
+  // data member
+ private:
+  std::vector<GeigerRing>* frings;
+  
+ protected: 
+  double helixdistance(GeigerRing gr, const double *p); // calculate distance helix-cylinder
+  
+ public:
+ HelixDistance2(std::vector<GeigerRing> * g) : frings(g) {}
+  ~Helixdistance2() { }
+  
+  // implementation of the function to be minimized
+  double operator() (const double * par) {
+    double sum = 0.0;
+    for (GeigerRing entry : *frings) {
+      double d = helixdistance(entry, par);
+      sum += d*d; // squared weighted distance
+    }
+    return sum;
+  }
+  
+};
 
 
 
@@ -58,35 +110,20 @@ class SNFitter {
 
  private:
   std::vector<GeigerRing> rings;
-
-  struct LineDistance2 {
-    // implementation of the function to be minimized
-    double operator() (const double * par) {
-      double sum = 0;
-      for (GeigerRing entry : rings) {
-	double d = linedistance(entry, par);
-	sum += d*d; // squared weighted distance
-      }
-      return sum;
-    }
-  };
-  
   
  protected:
   std::vector<double> line_initials(double frad);
-  std::vector<GeigerRing> allRings() {return rings;}
-  double linedistance(GeigerRing gr, const double *p); // calculate distance line-cylinder
-  //  double helixdistance(GeigerRing gr, const double *p);
-  
-  
+  std::vector<double> helix_initials();
+  std::vector<double> helixbackup();
+
  public:
-  SNFitter() {} // Constructor
+ SNFitter(std::vector<GeigerRing> g) : rings(g) {} // Constructor
   ~SNFitter() {
     rings.clear();
   }
   
-  std::vector<LineFit> fitline(std::vector<GeigerRing> gr); // sets the data and operates
-  //  std::vector<HelixFit> fithelix(std::vector<GeigerRing> rings);
+  std::vector<LineFit> fitline(); // sets the data and operates
+  std::vector<HelixFit> fithelix();
 };
 
 

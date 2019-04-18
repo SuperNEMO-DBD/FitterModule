@@ -65,8 +65,8 @@ std::vector<GeigerRing> lineC() {
 
 
 int check_lineA(){
-  SNFitter snf;
   std::vector<GeigerRing> rings = lineA();
+  SNFitter snf(rings);
   int fails = 0;
   std::vector<LineFit> res = snf.fitline(rings);
   for (LineFit lf : res) { // should contain 4 candidates
@@ -77,9 +77,9 @@ int check_lineA(){
 }
 
 bool check_lineB(){
-  SNFitter snf;
   bool found = false;
   std::vector<GeigerRing> rings = lineB();
+  SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline(rings);
   for (LineFit lf : res) { // should contain 4 candidates
     if (lf.ixy>31.0 && lf.ixy<32.0) // for one: near 31.5 with small error
@@ -90,9 +90,9 @@ bool check_lineB(){
 
 
 bool check_lineC1(){
-  SNFitter snf;
   bool found = false;
   std::vector<GeigerRing> rings = lineC();
+  SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline(rings);
   for (LineFit lf : res) { // should contain 4 candidates
     if (lf.slxy>0.0591 && lf.slxy<0.0592) // for two cases: near 0.0591x
@@ -103,9 +103,9 @@ bool check_lineC1(){
 
 
 bool check_lineC2(){
-  SNFitter snf;
   bool large = false;
   std::vector<GeigerRing> rings = lineC();
+  SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline(rings);
   for (LineFit lf : res) { // should contain 4 candidates
     if (lf.chi2 >= 1.0e-6) // for all: less than 1.0e-6 in tests
