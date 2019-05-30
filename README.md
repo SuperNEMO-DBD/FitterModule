@@ -196,3 +196,35 @@ weighted graph object that hosts the classic Dijkstra shortest path algorithm be
 node source and a node target. This weighted graph is quite different to the unweighted 
 graph used in the cluster library. Weights are defined as doubles (here Euclidean distances) 
 while nodes remain integer identifiers with the same argument as explained in the cluster library.
+
+## Data model
+
+LineFit structure: 
+- 4 best fit parameter (double), slopes and intercepts
+- 4 error values (double)
+- Chi2 (double)
+- Probability (double)
+- Fit status (integer)
+
+HelixFit structure:
+- 5 best fit parameter (double), radius, pitch, centre (x,y,z)
+- 5 error values (double)
+- Chi2 (double)
+- Probability (double)
+- Fit status (integer)
+
+BrokenLineFit structure:
+- 2 LineFit structures with the second potentially empty
+- breakpoint collection (vector<int>); potentially empty
+- angle collection (vector<double>)
+- path point collection (vector<PathPoint>); see below
+- path length (double)
+- Chi2 (double)
+- Probability (double)
+- Fit status (integer)
+
+PathPoint stucture:
+- 3 tangent point coordinates (double)
+- 3 errors in Cartesian coordinates (double)
+- 1 ID pair (pair<int, size_t>)
+
