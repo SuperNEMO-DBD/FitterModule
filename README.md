@@ -1,7 +1,7 @@
 # Fitting module readme
 
 Yorck Ramachers (Warwick)
-Last updated April 17, 2019
+Last updated May 30, 2019
 
 The Fitter module is a SuperNEMO reconstruction module. It attempts to
 fit clustered tracker hits and fill the TTD data bank in Falaise in the current
@@ -81,8 +81,11 @@ structure nor the embedding of this module into flreconstruct.
 
 ## Fitting process:
 
-Each cluster of Geiger Hits is fit with two expected models currently: a line model in 3D 
-and a helix model in 3D. The former requires four fit parameters, the latter five. The 
+Each cluster of Geiger Hits is fit with three expected models: a line model in 3D, 
+a broken line mode in 3D and a helix model in 3D. The former requires four fit 
+parameters, the latter five. The broken line model also features 4 fit parameters but 
+delivers additionally all relative angles between data points, i.e. a perfect 
+line would have zero angles, showing no deviation from a perfect line model. The 
 fitter object, SNFitter, has methods to calculate initial best guesses for the fit 
 parameters of each model. 
 
@@ -101,24 +104,29 @@ and model. The minimizer will then attempt to minimize that (weighted) distance.
 therefore a textbook least squares minimization problem.
 
 Consequently, best fit values for all parameters as well as their errors require storage. 
-Likewise, the goodness-of-fit value characterising the process and any potential message 
+Likewise, the goodness-of-fit value characterising the process and any potential messages 
 from the process require storage. The fit results need to be evaluated subsequently and 
 these numbers are hence important. Likewise any fit extrapolation of a given model can 
 only be done properly with fit errors known. Vertex determination needs to result in 
 an extended area rather than an intersection point. This can only take place with model 
 uncertainties known to the vertex extrapolator.
 
-WIP: While the above models merely require Euclidian geometry to obtain the distances of 
-all cylinders to models, extension to a boken line model (V. Blobel, NIM A566 (2006) 14) more 
-suitable for broken tracks due to multiple scattering proves impossible with ring-data. 
+While the above models merely require Euclidian geometry to obtain the distances of 
+cylinders to models, an extension to a broken line model (V. Blobel, NIM A566 (2006) 14) 
+is more suitable for broken tracks due to multiple scattering. 
 
 The broken line algorithm relies on being able to define separated planes in propagation 
 direction. Data points (with propagation vector) must fix non-overlapping planes such that a comparison to 
 neighbouring direction vectors becomes possible. That appears to be impossible for ring-data 
 in the tracker where the suitable tangent points depend on the momentary model solution and 
-non-overlapping planes can change order at each iteration. The rings would have to be replaced 
-first with a collection of suitable, potential tangent points as data to fit a broken line. This is 
-possible but not implemented yet.
+non-overlapping planes can change order at each iteration. 
+
+The rings therefore have to be replaced first with a collection of tangent points as data 
+to fit a broken line. This fitting capability hence introduces a large section of code 
+dedicated purely to tangent point calculations and path finding since not all tangent points 
+are viable for a potential charged particle path. Every possible path should then be fit separately 
+and sorted as a candidate charge path according to fit quality. Sorting only to shortest paths  
+can yield surprising kinks since the origin of the potential path points are after all rings.
 
 ## Algorithm 
 
@@ -136,6 +144,20 @@ between a model circle and a set of circles (the data). Again, the vector connec
 defines all the important points. It passes through the data circle circumference and the 
 helix (being the circumference of a circle too). The distance between those two points then 
 contributes to the total sum of distances.
+
+The broken line fit algorithm is documented in (V. Blobel, NIM A566 (2006) 14) and maps 
+well to SuperNEMO data iff the data to fit consists of suitable path points made from 
+tangent points on the collection of rings. The natural propagation direction for 
+the algorithm to walk from point to point is the x-coordinate axis in both trackers.
+The line model for the broken line allows for vector to vector angle deviations at every 
+step, each adding to the Chi square sum hence straight lines are favoured but not 
+enforced. The collection of individual angles for a best fit line is stored and can be 
+analysed once the best fit has been obtained. A Kink finder algorithm is included which 
+searches for a significant angle above angle noise and signals, if found, a scatter event 
+along the track. The longer the track, the more data there is, the more sensitive the 
+kink finder gets. Should a kink be located, the track solution is split into 
+at least two tracks, the nearest track stub to the foil and the calo. Each is then the best 
+estimate for extrapolation to the foil and calo, respectively.
 
 ## Utilities
 
@@ -165,3 +187,12 @@ A backup function for inital values appears to work just as fine. It suggests th
 locations (y: how the helix curves, up or down, z: pitch direction - up or down) are more 
 important than staying close to true values.
 
+The broken line algorithm uses a lot of code to calculate tangent points on all rings in relation 
+to each other and subsequently to find suitable paths from one end of the track to the other.
+While the tangent point calculations follow well documented Euclidean geometry formulae, the 
+path finding required a few utility objects such as an Interval object that respects intervals on
+a circle rather than purely on a straight line. Another significant utility object is a 
+weighted graph object that hosts the classic Dijkstra shortest path algorithm between a 
+node source and a node target. This weighted graph is quite different to the unweighted 
+graph used in the cluster library. Weights are defined as doubles (here Euclidean distances) 
+while nodes remain integer identifiers with the same argument as explained in the cluster library.
