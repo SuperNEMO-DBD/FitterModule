@@ -90,19 +90,19 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
   // Check tracker trajectory data //
   ///////////////////////////////////
 
-  bool preserve_former_output = true; // keep all
+  //  bool preserve_former_output = true; // keep all
   
   // check if some 'tracker_trajectory_data' are available in the data model:
-  snemo::datamodel::tracker_trajectory_data * ptr_trajectory_data = 0;
-  if (! data_record_.has(_TTD_label_)) {
-    ptr_trajectory_data = &(data_record_.add<snemo::datamodel::tracker_trajectory_data>(_TTD_label_));
-  } else {
-    ptr_trajectory_data = &(data_record_.grab<snemo::datamodel::tracker_trajectory_data>(_TTD_label_));
-  }
-  snemo::datamodel::tracker_trajectory_data & the_trajectory_data = *ptr_trajectory_data;
-  if (the_trajectory_data.has_solutions()) 
-    if (! preserve_former_output) 
-      the_trajectory_data.reset();
+  // snemo::datamodel::tracker_trajectory_data * ptr_trajectory_data = 0;
+  // if (! data_record_.has(_TTD_label_)) {
+  //   ptr_trajectory_data = &(data_record_.add<snemo::datamodel::tracker_trajectory_data>(_TTD_label_));
+  // } else {
+  //   ptr_trajectory_data = &(data_record_.grab<snemo::datamodel::tracker_trajectory_data>(_TTD_label_));
+  // }
+  // snemo::datamodel::tracker_trajectory_data & the_trajectory_data = *ptr_trajectory_data;
+  // if (the_trajectory_data.has_solutions()) 
+  //   if (! preserve_former_output) 
+  //     the_trajectory_data.reset();
   
   
   /********************
@@ -117,25 +117,25 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
   std::cout << "In process: event counter = " << eventCounter << std::endl;
 
   // get all trajectory solutions
-  const sdm::tracker_trajectory_data::solution_col_type& all_solutions = the_trajectory_data.get_solutions();
-  for (auto entry : all_solutions) { 
-    //entry.get().tree_dump();
-    const sdm::tracker_trajectory_solution::trajectory_col_type &defaults = entry.get().get_trajectories();
+  // const sdm::tracker_trajectory_data::solution_col_type& all_solutions = the_trajectory_data.get_solutions();
+  // for (auto entry : all_solutions) { 
+  //   //entry.get().tree_dump();
+  //   const sdm::tracker_trajectory_solution::trajectory_col_type &defaults = entry.get().get_trajectories();
     
-    for (auto traj_handle : defaults) {
-      const sdm::base_trajectory_pattern & the_base_pattern = traj_handle.get().get_pattern();
-      if (the_base_pattern.get_pattern_id()=="line") {
-  	const geomtools::line_3d & the_shape = (const geomtools::line_3d&)the_base_pattern.get_shape();
-	geomtools::vector_3d dir = the_shape.get_direction_on_curve(the_shape.get_first());
-	std::cout << "directional: " << dir.x() << ", " << dir.y() << ", " << dir.z() << std::endl;
-	std::cout << "p on line: " << the_shape.get_first().x() << ", " << the_shape.get_first().y() << ", " << the_shape.get_first().z() << std::endl;
-      }
-      else {
-  	const geomtools::helix_3d & the_shape = (const geomtools::helix_3d&)the_base_pattern.get_shape();
-  	the_shape.tree_dump();
-      }
-    }
-  }
+  //   for (auto traj_handle : defaults) {
+  //     const sdm::base_trajectory_pattern & the_base_pattern = traj_handle.get().get_pattern();
+  //     if (the_base_pattern.get_pattern_id()=="line") {
+  // 	const geomtools::line_3d & the_shape = (const geomtools::line_3d&)the_base_pattern.get_shape();
+  // 	geomtools::vector_3d dir = the_shape.get_direction_on_curve(the_shape.get_first());
+  // 	std::cout << "directional: " << dir.x() << ", " << dir.y() << ", " << dir.z() << std::endl;
+  // 	std::cout << "p on line: " << the_shape.get_first().x() << ", " << the_shape.get_first().y() << ", " << the_shape.get_first().z() << std::endl;
+  //     }
+  //     else {
+  // 	const geomtools::helix_3d & the_shape = (const geomtools::helix_3d&)the_base_pattern.get_shape();
+  // 	the_shape.tree_dump();
+  //     }
+  //   }
+  // }
   
 
   eventCounter++;

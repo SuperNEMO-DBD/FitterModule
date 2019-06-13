@@ -8,7 +8,8 @@
 // ROOT includes
 #include <Math/Vector3D.h>
 #include <Math/Vector2D.h>
-#include <TMath>
+#include <TMath.h>
+#include <TVector3.h>
 
 // data storage objects
 struct MetaInfo {
@@ -119,7 +120,7 @@ class LineDistance2 {
   
  public:
  LineDistance2(std::vector<GeigerRing> * g) : frings(g) { }
-  ~Linedistance2() { }
+  ~LineDistance2() { }
   
   // implementation of the function to be minimized
   double operator() (const double * par) {
@@ -145,7 +146,7 @@ class HelixDistance2 {
   
  public:
  HelixDistance2(std::vector<GeigerRing> * g) : frings(g) {}
-  ~Helixdistance2() { }
+  ~HelixDistance2() { }
   
   // implementation of the function to be minimized
   double operator() (const double * par) {
@@ -462,7 +463,7 @@ private:
   bool overlap_x(PathPoint p1, PathPoint p2);
   bool overlap_y(PathPoint p1, PathPoint p2);
   double edgelength(int e1, int e2);
-  vector<int> find_allint(vector<PathPoint> myvector, int pint);
+  std::vector<int> find_allint(std::vector<PathPoint> myvector, int pint);
   size_t make_ahash(PathPoint pp);
   std::vector<int> column_hits(int col);
 
@@ -489,6 +490,7 @@ class SNFitter {
 
  private:
   std::vector<TrackerHit> rings;
+  std::vector<GeigerRing> grings;
   
  protected:
   std::vector<double> line_initials(double frad);
@@ -501,7 +503,7 @@ class SNFitter {
     
   
  public:
- SNFitter(std::vector<TrackerHit> th) : rings(th) {;} // Constructor
+ SNFitter(std::vector<TrackerHit> th) : rings(th) {for (auto& hit : rings) grings.push_back(hit.gr);} // Constructor
   ~SNFitter() {
     rings.clear();
   }

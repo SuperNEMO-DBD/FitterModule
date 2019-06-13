@@ -7,7 +7,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 find_package(Falaise REQUIRED)
 
 # Need ROOT library separately
-find_package(ROOT REQUIRED)
+find_package(ROOT REQUIRED Spectrum Minuit)
 
 # find the headers
 include_directories(.)
@@ -18,6 +18,13 @@ add_library(Fitter SHARED fitter_module.h
 		   fitter_library.cpp 
 		   fitter_module.cpp)
 target_link_libraries(Fitter PUBLIC Falaise::FalaiseModule)
+
+# Build a dynamic library from our sources for algorithm only
+# required for testing executables.
+include_directories(${ROOT_INCLUDE_DIRS})
+add_library(FitAlgorithm SHARED fitter_library.h 
+			  fitter_library.cpp)
+target_link_libraries(FitAlgorithm PUBLIC ${ROOT_LIBRARIES})
 
 
 # Configure example pipeline script for use from the build dir
@@ -33,10 +40,19 @@ target_include_directories(Catch INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/testing)
 
 # add test executable
 include_directories(. testing)
-add_executable(trial testing/trial.cpp)
-target_link_libraries(trial PUBLIC Catch Fitter)
+add_executable(linetest testing/linetest.cpp)
+target_link_libraries(linetest PUBLIC Catch FitAlgorithm)
+
+# add test executable
+add_executable(helixtest testing/helixtest.cpp)
+target_link_libraries(helixtest PUBLIC Catch FitAlgorithm)
 
 # CTest comand
-add_test(NAME trial
-  COMMAND trial -s
+add_test(NAME linetest
+  COMMAND linetest -s
+)
+
+# CTest comand
+add_test(NAME helixtest
+  COMMAND helixtest -s
 )

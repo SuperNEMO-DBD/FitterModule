@@ -7,6 +7,7 @@
 #include <TSpectrum.h>
 #include "TKDTree.h"
 #include "TH1D.h"
+#include "TLinearFitter.h"
 
 
 // std
@@ -82,14 +83,14 @@ std::vector<double> SNFitter::line_initials(double frad) {
   TLinearFitter *lfxy = new TLinearFitter();
   lfxy->SetFormula("pol1");
 
-  unsigned int nd = rings.size();
+  unsigned int nd = grings.size();
   double* xx = new double [nd];
   double* yy = new double [nd];
   double* ey = new double [nd];
   for (unsigned int j=0;j<nd;j++) {
-    xx[j] = rings.gr.at(j).wirex;
-    yy[j] = rings.gr.at(j).wirey;
-    ey[j] = rings.gr.at(j).rerr;
+    xx[j] = grings.at(j).wirex;
+    yy[j] = grings.at(j).wirey;
+    ey[j] = grings.at(j).rerr;
   }
   lfxy->AssignData((int)nd,1,xx,yy,ey);
   lfxy->Eval();
@@ -124,14 +125,14 @@ std::vector<LineFit> SNFitter::fitline() {
   fitter.Config().SetDefaultMinimizer("Minuit2");
   
   // make the functor object
-  LineDistance2 ldist(&rings.gr);
+  LineDistance2 ldist(&grings);
   ROOT::Math::Functor fcn(ldist,4);
 
   // first initials
   std::vector<double> dummy;
   std::vector<double>::iterator mit;
-  double leftright = rings.gr.at(0).wirex;
-  for (GeigerRing gg  : rings.gr)
+  double leftright = grings.at(0).wirex;
+  for (GeigerRing gg  : grings)
     dummy.push_back(gg.wirex);
   if (leftright>0)
     mit = std::min_element(dummy.begin(), dummy.end());
@@ -139,19 +140,19 @@ std::vector<LineFit> SNFitter::fitline() {
     mit = std::max_element(dummy.begin(), dummy.end());
 
   int idx = mit - dummy.begin();
-  double first_radius = rings.gr.at(idx).radius;
+  double first_radius = grings.at(idx).radius;
 
   // initials for x-y plane
   std::vector<double> res = line_initials(first_radius);
   // for x-z plane
-  unsigned int nd = rings.size();
+  unsigned int nd = grings.size();
   double* xx = new double [nd];
   double* zz = new double [nd];
   double* ez = new double [nd];
   for (unsigned int j=0;j<nd;j++) {
-    xx[j] = rings.gr.at(j).wirex;
-    zz[j] = rings.gr.at(j).zcoord;
-    ez[j] = rings.gr.at(j).zerr;
+    xx[j] = grings.at(j).wirex;
+    zz[j] = grings.at(j).zcoord;
+    ez[j] = grings.at(j).zerr;
   }
   // fit in x-z plane, once only
   TLinearFitter *lfxz = new TLinearFitter();
@@ -170,7 +171,7 @@ std::vector<LineFit> SNFitter::fitline() {
     iniline[3] = lfxz->GetParameter(1);
 
     // fit
-    fitter.SetFCN(fcn, iniline, (unsigned int)rings.size(), true);
+    fitter.SetFCN(fcn, iniline, (unsigned int)grings.size(), true);
     
     bool ok = fitter.FitFCN();
     const ROOT::Fit::FitResult & result = fitter.Result();
@@ -203,14 +204,14 @@ std::vector<LineFit> SNFitter::fitline() {
 std::vector<double> SNFitter::helix_initials() {
   std::vector<double> results;
 
-  unsigned int nd = rings.size();
+  unsigned int nd = grings.size();
   double* xx = new double [nd];
   double* yy = new double [nd];
   double* zz = new double [nd];
   for (unsigned int j=0;j<nd;j++) {
-    xx[j] = rings.gr.at(j).wirex;
-    yy[j] = rings.gr.at(j).wirey;
-    zz[j] = rings.gr.at(j).zcoord;
+    xx[j] = grings.at(j).wirex;
+    yy[j] = grings.at(j).wirey;
+    zz[j] = grings.at(j).zcoord;
   }
 
   std::valarray<double> valx (xx, nd);
@@ -264,13 +265,13 @@ std::vector<double> SNFitter::helix_initials() {
   results.push_back(vc + meany); // centre y
 
   std::vector<double> dummy;
-  for (GeigerRing gg  : rings.gr)
+  for (GeigerRing gg  : grings)
     dummy.push_back(gg.wirex);
   std::vector<double>::iterator maxit = std::max_element(dummy.begin(), dummy.end());
   std::vector<double>::iterator minit = std::min_element(dummy.begin(), dummy.end());
   int maxidx = maxit - dummy.begin();
   int minidx = minit - dummy.begin();
-  results.push_back(0.5*(rings.gr.at(maxidx).zcoord + rings.gr.at(minidx).zcoord)); // z centre
+  results.push_back(0.5*(grings.at(maxidx).zcoord + grings.at(minidx).zcoord)); // z centre
 
   delete [] zz;
   delete [] yy;
@@ -284,14 +285,14 @@ std::vector<double> SNFitter::helix_initials() {
 std::vector<double> SNFitter::helixbackup() {
   std::vector<double> results;
   std::vector<double> dummy;
-  for (GeigerRing gg  : rings.gr)
+  for (GeigerRing gg  : grings)
     dummy.push_back(gg.wirex);
   std::vector<double>::iterator maxit = std::max_element(dummy.begin(), dummy.end());
   std::vector<double>::iterator minit = std::min_element(dummy.begin(), dummy.end());
   int maxidx = maxit - dummy.begin();
   int minidx = minit - dummy.begin();
-  double zmean = 0.5*(rings.gr.at(maxidx).zcoord + rings.gr.at(minidx).zcoord);
-  double ymean = 0.5*(rings.gr.at(maxidx).wirey + rings.gr.at(minidx).wirey);
+  double zmean = 0.5*(grings.at(maxidx).zcoord + grings.at(minidx).zcoord);
+  double ymean = 0.5*(grings.at(maxidx).wirey + grings.at(minidx).wirey);
   // some guess dummy values
   results.push_back(100.0); // r
 
@@ -317,7 +318,7 @@ std::vector<HelixFit> SNFitter::fithelix() {
   ROOT::Fit::Fitter fitter;
   
   // make the functor object
-  HelixDistance2 hdist(&rings.gr);
+  HelixDistance2 hdist(&grings);
   ROOT::Math::Functor fcn(hdist,5);
 
   std::vector<double> res = helix_initials();
@@ -328,7 +329,7 @@ std::vector<HelixFit> SNFitter::fithelix() {
 
   double inihelix[5] = {res[0], res[1], res[2], res[3], res[4]};
 
-  fitter.SetFCN(fcn, inihelix, (unsigned int)rings.size(), true);
+  fitter.SetFCN(fcn, inihelix, (unsigned int)grings.size(), true);
 
   // fit
   bool ok = fitter.FitFCN();
@@ -338,14 +339,13 @@ std::vector<HelixFit> SNFitter::fithelix() {
     res = helixbackup();
     double inihelix2[5] = {res[0], res[1], res[2], res[3], res[4]};
 
-    fitter.SetFCN(fcn, inihelix2, (unsigned int)rings.size(), true);
+    fitter.SetFCN(fcn, inihelix2, (unsigned int)grings.size(), true);
 
     // fit
     ok = fitter.FitFCN();
 
     if (!ok) {
       std::cout << "helix3Dfit: Helix3D Fit failed" << std::endl;
-      std::cout << "chi square " << result.Chi2() << " is valid: " << result.Status() << " cov matrix: " << result.CovMatrixStatus() << std::endl;
       store = false;
     }
   }
@@ -506,7 +506,7 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
     ROOT::Math::Functor fcn(bldist,4);
     
     // store the data
-    blf.path = pp.path;
+    blf.path = ppc.path;
     blf.length = ppc.length;
 
     // initials from x-y, x-z plane fits
@@ -753,7 +753,7 @@ std::vector<int> PathFinder::column_hits(int col) {
 }
 
 
-vector<int> PathFinder::find_allint(vector<PathPoint> myvector, int pint)
+std::vector<int> PathFinder::find_allint(std::vector<PathPoint> myvector, int pint)
 {
   std::vector<int> temp;
   for (auto& pp : myvector)
