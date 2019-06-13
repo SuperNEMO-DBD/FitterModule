@@ -503,11 +503,13 @@ class SNFitter {
     
   
  public:
+ SNFitter() {rings.clear(); grings.clear();} // default Constructor
  SNFitter(std::vector<TrackerHit> th) : rings(th) {for (auto& hit : rings) grings.push_back(hit.gr);} // Constructor
   ~SNFitter() {
     rings.clear();
   }
   
+  void setData(std::vector<TrackerHit> th) {rings.clear(); grings.clear(); rings = th; for (auto& hit : rings) grings.push_back(hit.gr);}
   std::vector<LineFit> fitline(); // sets the data and operates
   std::vector<HelixFit> fithelix();
   std::vector<BrokenLineFit> fitbrokenline();
