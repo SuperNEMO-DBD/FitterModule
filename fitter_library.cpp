@@ -1020,7 +1020,7 @@ void PathFinder::find_paths() {
   for (int s : pathstarts) {
     for (int t : pathtargets) {
       if (gr.isReachable(s, t) && s != t) {
-        std::cout << "Reach " << t << " from " << s << std::endl;
+	//        std::cout << "Reach " << t << " from " << s << std::endl;
       	ppc.length = gr.dijkstraPaths(s, t);
         // std::cout << "direct length return: " << ppc.length << std::endl;
 	for (auto& pid : gr.path())
@@ -1041,10 +1041,10 @@ void PathFinder::find_paths() {
   std::sort(paths.begin(), paths.end(), [](PathPointCollection ppc1, PathPointCollection ppc2){return (ppc1.length < ppc2.length);}); // sort according to path length
   
   // check
-  for (auto& ppc : paths) {
-    std::cout << "Check length = " << ppc.length << std::endl;
-    std::cout << "entries in path: " << ppc.path.size() << std::endl;
-  }
+  // for (auto& ppc : paths) {
+  //   std::cout << "Check length = " << ppc.length << std::endl;
+  //   std::cout << "entries in path: " << ppc.path.size() << std::endl;
+  // }
   
 
   // check pathpointcollection
