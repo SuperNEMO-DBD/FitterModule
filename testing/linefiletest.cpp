@@ -7,7 +7,7 @@
 
 int readrun() {
   // input reader
-  TFile* ff = new TFile("../testing/idealhelix1000.root");
+  TFile* ff = new TFile("../testing/idealline1000.root");
   TTreeReader reader("hit_tree", ff);
   // obtain all the required input data from file
   TTreeReaderValue<std::vector<double>> radius(reader, "radius");
@@ -16,6 +16,7 @@ int readrun() {
   TTreeReaderValue<std::vector<double>> wirez(reader, "wirez");
 
   int counter = 0;
+  int some = 0;
   GeigerRing ring;
   TrackerHit th;
   std::vector<TrackerHit> rings;
@@ -25,7 +26,7 @@ int readrun() {
     reader.Next(); // all data available
     for (unsigned int j=0;j<radius->size();j++) {
       ring.rerr   = 0.9;
-      ring.zerr = 10.0;
+      ring.zerr = 1.0;
       ring.radius = radius->at(j);
       ring.wirex  = wirex->at(j);
       ring.wirey  = wirey->at(j);
@@ -34,10 +35,18 @@ int readrun() {
       rings.push_back(th);
     }
     snf.setData(rings);
-    if (snf.fithelix().empty())
-      counter++;
+    std::vector<LineFit> res = snf.fitline();
+    
+    for (LineFit entry : res) {
+      if (entry.status>0)
+	some++;
+    }
+    if (some==4) {
+      counter++; // no valid fit
+    }
+    some = 0;
     rings.clear();
-  }    
+  }
   return counter;
 }
 
@@ -48,7 +57,7 @@ int check_run(){
 
 
 
-TEST_CASE( "Helix", "[falaise][helixrun]" ) {
-  REQUIRE( check_run() == 2 );
+TEST_CASE( "Line", "[falaise][linefilerun]" ) {
+  REQUIRE( check_run() == 29 );
 }
 

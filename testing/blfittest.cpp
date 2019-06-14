@@ -7,16 +7,21 @@
 
 int readrun() {
   // input reader
-  TFile* ff = new TFile("../testing/idealhelix1000.root");
+  TFile* ff = new TFile("../testing/idealline1000.root");
   TTreeReader reader("hit_tree", ff);
   // obtain all the required input data from file
   TTreeReaderValue<std::vector<double>> radius(reader, "radius");
   TTreeReaderValue<std::vector<double>> wirex(reader, "wirex");
   TTreeReaderValue<std::vector<double>> wirey(reader, "wirey");
   TTreeReaderValue<std::vector<double>> wirez(reader, "wirez");
+  TTreeReaderValue<std::vector<int>> grid_id(reader, "grid_id");
+  TTreeReaderValue<std::vector<int>> grid_side(reader, "grid_side");
+  TTreeReaderValue<std::vector<int>> grid_layer(reader, "grid_layer");
+  TTreeReaderValue<std::vector<int>> grid_column(reader, "grid_column");
 
   int counter = 0;
   GeigerRing ring;
+  MetaInfo mi;
   TrackerHit th;
   std::vector<TrackerHit> rings;
   SNFitter snf;
@@ -30,11 +35,16 @@ int readrun() {
       ring.wirex  = wirex->at(j);
       ring.wirey  = wirey->at(j);
       ring.zcoord = wirez->at(j);
+      mi.hitid = grid_id->at(j);
+      mi.side = grid_side->at(j);
+      mi.row = grid_column->at(j);
+      mi.column = grid_layer->at(j);
+      th.mi = mi;
       th.gr = ring;
       rings.push_back(th);
     }
     snf.setData(rings);
-    if (snf.fithelix().empty())
+    if (snf.fitbrokenline().empty())
       counter++;
     rings.clear();
   }    
@@ -48,7 +58,7 @@ int check_run(){
 
 
 
-TEST_CASE( "Helix", "[falaise][helixrun]" ) {
+TEST_CASE( "BrokenLine", "[falaise][brokenlinerun]" ) {
   REQUIRE( check_run() == 2 );
 }
 

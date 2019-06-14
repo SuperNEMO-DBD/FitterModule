@@ -55,15 +55,18 @@ target_link_libraries(rhtest PUBLIC Catch FitAlgorithm)
 add_executable(pftest testing/pftest.cpp)
 target_link_libraries(pftest PUBLIC Catch FitAlgorithm)
 
+# add test executable
+add_executable(blfittest testing/blfittest.cpp)
+target_link_libraries(blfittest PUBLIC Catch FitAlgorithm)
+
+# add test executable
+add_executable(linefiletest testing/linefiletest.cpp)
+target_link_libraries(linefiletest PUBLIC Catch FitAlgorithm)
+
 
 # CTest comand
 add_test(NAME linetest
   COMMAND linetest -s
-)
-
-# CTest comand
-add_test(NAME helixtest
-  COMMAND helixtest -s
 )
 
 # CTest comand
@@ -74,5 +77,20 @@ add_test(NAME rhtest
 # CTest comand
 add_test(NAME pftest
   COMMAND pftest -s
+)
+
+# CTest comand
+add_test(NAME helixtest
+  COMMAND helixtest -s
+)
+
+# CTest comand
+add_test(NAME linefiletest
+  COMMAND linefiletest -s
+)
+
+# CTest comand
+add_test(NAME blfittest
+  COMMAND blfittest -s
 )
 
