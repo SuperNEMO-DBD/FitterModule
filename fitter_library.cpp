@@ -314,7 +314,6 @@ std::vector<double> SNFitter::helixbackup() {
 std::vector<HelixFit> SNFitter::fithelix() {
   std::vector<HelixFit> results;
   HelixFit hf;
-  bool store = true;
   ROOT::Fit::Fitter fitter;
   
   // make the functor object
@@ -346,31 +345,28 @@ std::vector<HelixFit> SNFitter::fithelix() {
 
     if (!ok) {
       std::cout << "helix3Dfit: Helix3D Fit failed" << std::endl;
-      store = false;
     }
   }
-  if (store) {
-    const ROOT::Fit::FitResult & result = fitter.Result();
-    hf.status = result.Status(); // fit to ring in 2d status
-    hf.chi2 = result.Chi2();
-    hf.prob = result.Prob();
-    
-    const double* bestfit = result.GetParams();
-    const double* errors = result.GetErrors();
-    hf.radius = bestfit[0];
-    hf.raderr = errors[0];
-    hf.pitch = bestfit[1];
-    hf.errpitch = errors[1];
-    hf.xc = bestfit[2];
-    hf.errxc = errors[2];
-    hf.yc = bestfit[3];
-    hf.erryc = errors[3];
-    hf.zc = bestfit[4];
-    hf.errzc = errors[4];
-    
-    results.push_back(hf);
-  }
-  return results; // could be empty - for no fit
+  const ROOT::Fit::FitResult & result = fitter.Result();
+  hf.status = result.Status();
+  hf.chi2 = result.Chi2();
+  hf.prob = result.Prob();
+  
+  const double* bestfit = result.GetParams();
+  const double* errors = result.GetErrors();
+  hf.radius = bestfit[0];
+  hf.raderr = errors[0];
+  hf.pitch = bestfit[1];
+  hf.errpitch = errors[1];
+  hf.xc = bestfit[2];
+  hf.errxc = errors[2];
+  hf.yc = bestfit[3];
+  hf.erryc = errors[3];
+  hf.zc = bestfit[4];
+  hf.errzc = errors[4];
+  
+  results.push_back(hf);
+  return results;
 }
 
 
@@ -490,6 +486,7 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
   std::vector<BrokenLineFit> results;
   BrokenLineFit blf;
   LineFit lf;
+  LineFit backup;
 
   PathFinder pf(rings);
   pf.create_paths(); // make all the tangent point data paths for fitting
@@ -510,13 +507,13 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
     blf.length = ppc.length;
 
     // initials from x-y, x-z plane fits
-    lf = fitline2D(ppc.path);
+    backup = fitline2D(ppc.path);
 
     double iniline[4];
-    iniline[0] = lf.ixy;
-    iniline[1] = lf.slxy;
-    iniline[2] = lf.ixz;
-    iniline[3] = lf.slxz;
+    iniline[0] = backup.ixy;
+    iniline[1] = backup.slxy;
+    iniline[2] = backup.ixz;
+    iniline[3] = backup.slxz;
     //    cout << "initial lines: " << iniline[0] << ", " << iniline[1] << ", " << iniline[2] << ", " << iniline[3] << endl;
 
     // do the fit
