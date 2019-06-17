@@ -36,7 +36,7 @@ int readrun() {
     snf.setData(rings);
     std::vector<HelixFit> res = snf.fithelix();
     for (HelixFit entry : res)
-      if (entry.status>0)
+      if (entry.status>1)
 	counter++;
     rings.clear();
   }    

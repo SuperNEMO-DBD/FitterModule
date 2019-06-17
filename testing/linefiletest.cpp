@@ -26,7 +26,7 @@ int readrun() {
     reader.Next(); // all data available
     for (unsigned int j=0;j<radius->size();j++) {
       ring.rerr   = 0.9;
-      ring.zerr = 1.0;
+      ring.zerr = 10.0;
       ring.radius = radius->at(j);
       ring.wirex  = wirex->at(j);
       ring.wirey  = wirey->at(j);
@@ -38,7 +38,7 @@ int readrun() {
     std::vector<LineFit> res = snf.fitline();
     
     for (LineFit entry : res) {
-      if (entry.status>0)
+      if (entry.status>1)
 	some++;
     }
     if (some==4) {
@@ -58,6 +58,6 @@ int check_run(){
 
 
 TEST_CASE( "Line", "[falaise][linefilerun]" ) {
-  REQUIRE( check_run() == 29 );
+  REQUIRE( check_run() == 0 );
 }
 
