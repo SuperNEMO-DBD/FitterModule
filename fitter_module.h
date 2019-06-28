@@ -27,7 +27,7 @@ class fitter_module : public dpp::base_module
 public:
 
 	/// Constructor
-	fitter_module();
+	fitter_module(datatools::logger::priority = datatools::logger::PRIO_FATAL);
 	
 	/// Destructor
 	virtual ~fitter_module();

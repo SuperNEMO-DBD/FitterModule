@@ -3,6 +3,7 @@
 
 // Standard library:
 #include <iostream>
+#include <stdexcept>
 
 // geomtools
 #include "bayeux/geomtools/line_3d.h"
@@ -69,7 +70,8 @@ void fitter_module::reset()
 }
 
 // Constructor :
-fitter_module::fitter_module() : dpp::base_module()
+fitter_module::fitter_module(datatools::logger::priority logging_priority_)
+  : dpp::base_module(logging_priority_)
 {
 }
 
@@ -86,6 +88,25 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
   DT_THROW_IF (! this->is_initialized(), std::logic_error,
 	       "Module 'Fitter' is not initialized !");
   
+  ///////////////////////////////////
+  // Check tracker clustering data //
+  ///////////////////////////////////
+  
+  bool preserve_former_output = false;
+  
+  // check if some 'tracker_clustering_data' are available in the data model:
+  snemo::datamodel::tracker_clustering_data * ptr_cluster_data = 0;
+  if (! data_record_.has(_TCD_label_)) {
+    ptr_cluster_data = &(data_record_.add<snemo::datamodel::tracker_clustering_data>(_TCD_label_));
+  } else {
+    ptr_cluster_data = &(data_record_.grab<snemo::datamodel::tracker_clustering_data>(_TCD_label_));
+  }
+  snemo::datamodel::tracker_clustering_data & the_clustering_data = *ptr_cluster_data;
+  if (the_clustering_data.has_solutions()) 
+    if (! preserve_former_output) 
+      the_clustering_data.reset();
+
+
   ///////////////////////////////////
   // Check tracker trajectory data //
   ///////////////////////////////////
