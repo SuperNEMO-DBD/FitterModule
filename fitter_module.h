@@ -52,6 +52,7 @@ protected:
 
 private:
 	int eventCounter;
+	std::string _TCD_label_;
 	std::string _TTD_label_;
 	
 	// geometry service

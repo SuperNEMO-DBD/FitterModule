@@ -49,6 +49,7 @@ void fitter_module::initialize(const datatools::properties  & setup_,
 
   // check the label
   _TTD_label_ = snemo::datamodel::data_info::default_tracker_trajectory_data_label();
+  _TCD_label_ = snemo::datamodel::data_info::default_tracker_clustering_data_label();
 
   eventCounter = 0;
   this->_set_initialized(true);
@@ -145,23 +146,24 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
   // make a trajectory solution
   sdm::tracker_trajectory_solution::handle_type htts(new sdm::tracker_trajectory_solution);
   the_trajectory_data.add_solution(htts, true);
-  the_trajectory_data.grab_default_solution().set_solution_id(the_trajectory_data.get_number_of_solutions() - 1);
-  sdm::tracker_trajectory_solution & trajectory_solution = the_trajectory_data.grab_default_solution();
+  the_trajectory_data.grab_solutions().back().grab().set_solution_id(the_trajectory_data.get_number_of_solutions() - 1);
+  sdm::tracker_trajectory_solution & trajectory_solution = the_trajectory_data.grab_solutions().back().grab(); // maybe store in here a bit
 
   // Process clusters hits for fitting
   std::cout << "In process: event counter = " << eventCounter << std::endl;
 
   // get all cluster solutions
-  const sdm::tracker_clustering_data::solution_col_type& all_solutions = the_clustering_data.get_solutions();
+  const sdm::tracker_clustering_data::solution_col_type& all_solutions = ptr_cluster_data->get_solutions();
+
   for (auto entry : all_solutions) { 
     const sdm::tracker_clustering_solution::cluster_col_type &defaults = entry.get().get_clusters();
 
     for (auto cl_handle : defaults) {
-      const sdm::tracker_cluster::calibrated_tracker_hit::collection_type & gg_hits_col = cl_handle.get().get_hits();
+      const sdm::calibrated_tracker_hit::collection_type & gg_hits_col = cl_handle.get().get_hits();
 
       for (auto hit_handle : gg_hits_col) {
 	// work with geiger hits as members of a given cluster
-	const sdm::tracker_cluster::calibrated_tracker_hit & hit = hit_handle.get();
+	const sdm::calibrated_tracker_hit & hit = hit_handle.get();
 	ring.rerr   = hit.get_sigma_r();
 	ring.zerr   = hit.get_sigma_z();
 	ring.radius = hit.get_r();
