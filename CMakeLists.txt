@@ -7,7 +7,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 find_package(Falaise REQUIRED)
 
 # Need ROOT library separately
-find_package(ROOT REQUIRED Spectrum Minuit)
+find_package(ROOT REQUIRED Spectrum Minuit2 Minuit)
 
 # find the headers
 include_directories(.)
@@ -17,7 +17,7 @@ add_library(Fitter SHARED fitter_module.h
 		   fitter_library.h 
 		   fitter_library.cpp 
 		   fitter_module.cpp)
-target_link_libraries(Fitter PUBLIC Falaise::FalaiseModule)
+target_link_libraries(Fitter PUBLIC Falaise::FalaiseModule ${ROOT_LIBRARIES})
 
 # Build a dynamic library from our sources for algorithm only
 # required for testing executables.
