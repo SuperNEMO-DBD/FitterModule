@@ -223,7 +223,8 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
 	  std::cout << "This broken line fit failed with status " << entry.status  << std::endl;
 	else {
 	  LineFit lf = entry.linefit1;
-	  if (lf.chi2<0.0) { // just one linefit, no break
+	  LineFit lf2 = entry.linefit2;
+	  if (lf2.chi2<0.0) { // just one linefit, no break
 	    std::cout << "Broken Line fit: (status, chi2) " << entry.status << ", " << entry.chi2 << std::endl;
 	    std::cout << "slope, intercept in xy " << lf.slxy << ", " << lf.ixy << std::endl;
 	    std::cout << "errors in xy " << lf.errslxy << ", " << lf.errixy << std::endl;
@@ -231,7 +232,6 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
 	    std::cout << "errors in xz " << lf.errslxz << ", " << lf.errixz << std::endl;
 	  }
 	  else { // two lines fitted from break
-	    LineFit lf2 = entry.linefit2;
 	    std::cout << "Broken Line fit: (status, chi2) " << entry.status << ", " << entry.chi2 << std::endl;
 	    std::cout << "(1) slope, intercept in xy " << lf.slxy << ", " << lf.ixy << std::endl;
 	    std::cout << "(1) errors in xy " << lf.errslxy << ", " << lf.errixy << std::endl;
