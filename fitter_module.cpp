@@ -165,6 +165,8 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
       const sdm::calibrated_tracker_hit::collection_type & gg_hits_col = cl_handle.get().get_hits();
       std::cout << "cluster number: " << ++ncl << std::endl;
 
+      rings.clear();
+      std::cout << "number of gg hits: " << gg_hits_col.size() << std::endl;
       for (auto hit_handle : gg_hits_col) {
 	// work with geiger hits as members of a given cluster
 	const sdm::calibrated_tracker_hit & hit = hit_handle.get();
@@ -182,6 +184,7 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
 	th.gr = ring;
 	rings.push_back(th);
       }
+
       // ready to fit
       snf.setData(rings);
       std::vector<HelixFit>      hres = snf.fithelix();
@@ -245,7 +248,6 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
 	  }
 	}
       }
-      rings.clear();
     }
   }
 

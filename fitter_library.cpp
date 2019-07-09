@@ -159,12 +159,12 @@ std::vector<LineFit> SNFitter::fitline() {
   lfxz->SetFormula("pol1");
   lfxz->AssignData((int)nd,1,xx,zz,ez);
   lfxz->Eval();
-  //  cout << "xz: i " << lfxz->GetParameter(0) << ", sl " << lfxz->GetParameter(1) << endl;
+  //  std::cout << "xz: i " << lfxz->GetParameter(0) << ", sl " << lfxz->GetParameter(1) << std::endl;
 
   // full fit attempts
   double iniline[4];
   for (int i=0;i<8;i+=2) { // 4 candidates for initials in x-y
-    //    cout << "xy: i " << res[i] << ", sl " << res[i+1] << endl;
+    //    std::cout << "xy: i " << res[i] << ", sl " << res[i+1] << std::endl;
     iniline[0] = res[i];
     iniline[1] = res[i+1];
     iniline[2] = lfxz->GetParameter(0);
@@ -327,6 +327,7 @@ std::vector<HelixFit> SNFitter::fithelix() {
   }
 
   double inihelix[5] = {res[0], res[1], res[2], res[3], res[4]};
+  //  std::cout << "helix3Dfit initials: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << ", " << res[4] << std::endl;
 
   fitter.SetFCN(fcn, inihelix, (unsigned int)grings.size(), true);
 
@@ -788,21 +789,25 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
   // check
   // for (auto& rp : im) {
   //   std::cout << "path point from id (" << rp.first.pointid.first << "," << rp.first.pointid.second << ") to id (" << rp.second.pointid.first << "," << rp.second.pointid.second << ")" << std::endl;
-    // std::cout << "path point from tp " << rp.first.xc << ", " << rp.first.yc << std::endl;
-    // std::cout << "path point to tp " << rp.second.xc << ", " << rp.second.yc << std::endl;
+  //   std::cout << "path point from tp " << rp.first.xc << ", " << rp.first.yc << std::endl;
+  //   std::cout << "path point to tp " << rp.second.xc << ", " << rp.second.yc << std::endl;
   // }
+  related_points.clear();  
   std::vector<PathPoint> onhost;
   std::vector<PathPoint> onguest;
   for (auto& rp : im) {
     onhost.push_back(rp.first); // keep order
     onguest.push_back(rp.second);
   }
+  std::set<int> temp;
+  for (auto& pp : onhost)
+    temp.insert(pp.pointid.first); // unique hit ids
 
   std::set<std::pair<int,int> > mergehost;
   std::set<std::pair<int,int> > mergeguest;
-  for (unsigned int nn = 0; nn<hits.size(); nn++) {
-    std::vector<int> where = find_allint(onhost, (int)nn); // ring hit id search
-    // std::cout << " hit id " << nn << " found " << where.size() << " times in onhost." << std::endl;
+  for (int nn : temp) {
+    std::vector<int> where = find_allint(onhost, nn); // ring hit id search
+    //    std::cout << " hit id " << nn << " found " << where.size() << " times in onhost." << std::endl;
     for (unsigned int which=0; which<where.size()-1; which++) {
       for (unsigned int target=which+1; target<where.size(); target++) { // check on all subsequent
 	if (has_overlap(onhost.at(where.at(which)), onhost.at(where.at(target)))) {// test all points
@@ -813,9 +818,13 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
       }
     }
   }
-  for (unsigned int nn = 0; nn<hits.size(); nn++) {
+  temp.clear();
+  for (auto& pp : onguest)
+    temp.insert(pp.pointid.first); // unique hit ids
+
+  for (int nn : temp) {
     std::vector<int> where = find_allint(onguest, (int)nn); // ring hit id search
-    // std::cout << " hit id " << nn << " found " << where.size() << " times in onguest." << std::endl;
+    //    std::cout << " hit id " << nn << " found " << where.size() << " times in onguest." << std::endl;
     for (unsigned int which=0; which<where.size()-1; which++) {
       for (unsigned int target=which+1; target<where.size(); target++) { // check on all subsequent
 	if (has_overlap(onguest.at(where.at(which)), onguest.at(where.at(target)))) {// test all points
@@ -829,11 +838,11 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
   // now can modify intermediate container content
   for (auto& mpair : mergehost) {
     onhost.at(mpair.second) = onhost.at(mpair.first); // target = which PathPoint
-    // std::cout << "h: overwrite nr " << mpair.second << " with " << mpair.first << std::endl;
+    //    std::cout << "h: overwrite nr " << mpair.second << " with " << mpair.first << std::endl;
   }
   for (auto& mpair : mergeguest) {
     onguest.at(mpair.second) = onguest.at(mpair.first); // target = which PathPoint
-    // std::cout << "g: overwrite nr " << mpair.second << " with " << mpair.first << std::endl;
+    //    std::cout << "g: overwrite nr " << mpair.second << " with " << mpair.first << std::endl;
   }
     
 
@@ -851,6 +860,7 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
   }
 
   ordered_points.resize(nodes.size());
+  edges.clear();
   std::vector<std::pair<int, size_t> >::iterator itn;
   for (auto& rp : related_points) {// store edges with indices
     itn = std::find(nodes.begin(), nodes.end(), rp.first.pointid);
@@ -867,8 +877,8 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
     // std::cout << "edges to tp " << rp.second.xc << ", " << rp.second.yc << std::endl;
   }
   // check
- // for (auto& op : ordered_points)
- //   std::cout << "ordered points: " << op.pointid.first << ", " << op.xc << ", " << op.yc << std::endl;
+  // for (auto& op : ordered_points)
+  //   std::cout << "ordered points: " << op.pointid.first << ", " << op.xc << ", " << op.yc << std::endl;
 }
 
 
@@ -908,6 +918,7 @@ void PathFinder::make_edges() {
   double* dist = new double [nneighbours]; // check on nearest 8 neighbours in grid
   int* indx = new int [nneighbours];       // where 8 is the maximum posible in a square grid
 
+  allpairs.clear();
   for (counter=0; counter<nentries; counter++) {
     start = hits.at(counter);
     point[0] = x[counter];
@@ -1014,6 +1025,7 @@ void PathFinder::find_paths() {
   
   PathPointCollection ppc;
   std::vector<PathPoint> path;
+  paths.clear();
   for (int s : pathstarts) {
     for (int t : pathtargets) {
       if (gr.isReachable(s, t) && s != t) {
