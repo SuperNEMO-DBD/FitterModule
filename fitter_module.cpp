@@ -155,11 +155,15 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
   // get all cluster solutions
   const sdm::tracker_clustering_data::solution_col_type& all_solutions = ptr_cluster_data->get_solutions();
 
+  int nsol = 0;
+  int ncl  = 0;
   for (auto entry : all_solutions) { 
     const sdm::tracker_clustering_solution::cluster_col_type &defaults = entry.get().get_clusters();
+    std::cout << "cluster solution number: " << ++nsol << std::endl;
 
     for (auto cl_handle : defaults) {
       const sdm::calibrated_tracker_hit::collection_type & gg_hits_col = cl_handle.get().get_hits();
+      std::cout << "cluster number: " << ++ncl << std::endl;
 
       for (auto hit_handle : gg_hits_col) {
 	// work with geiger hits as members of a given cluster
@@ -199,6 +203,7 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
       }
 
       // Helix
+      std::cout << "*** Helix next ***" << std::endl;
       for (HelixFit entry : hres) {
 	if (entry.status>1)
 	  std::cout << "This helix fit failed with status " << entry.status  << std::endl;
@@ -212,6 +217,7 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
       }
 
       // Broken Line last
+      std::cout << "*** Broken Line section next ***" << std::endl;
       for (BrokenLineFit entry : bres) {
 	if (entry.status>1)
 	  std::cout << "This broken line fit failed with status " << entry.status  << std::endl;
