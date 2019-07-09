@@ -23,7 +23,7 @@ The fitter_module code works but only prints results to terminal. Therefore, use
 
 ## Description
 
-Add to an flreconstruct pipeline to cluster tracker hits for reconstruction. To build it, do
+Add to an flreconstruct pipeline to fit clustered tracker hits for reconstruction. To build it, do
 
 ``` console
 $ ls
@@ -59,7 +59,7 @@ Fitter.directory : string = "/my/path/to/build/directory"
 # Define the modules in the pipeline:
 [name="pipeline" type="fitter_module"]
 ...
-$ flreconstruct -i /path/to/input.brio -p fit.conf -o /tmp/fitted_data.brio
+$ flreconstruct -i /path/to/input.brio -p fit.conf 
 ```
 
 ## Implementation
