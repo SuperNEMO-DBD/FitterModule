@@ -1,7 +1,7 @@
 # Fitting module readme
 
 Yorck Ramachers (Warwick)
-Last updated June 18, 2019
+Last updated July 9, 2019
 
 The Fitter module is a SuperNEMO reconstruction module. It attempts to
 fit clustered tracker hits and fill the TTD data bank in Falaise in the current
@@ -9,7 +9,7 @@ event data model. Unfortunately, that is not possible since the TTD data
 bank does not offer to hold neither required data on fit characteristics 
 nor fit errors.
 
-The fitter_module code is therefore left empty for now - this is not a working Falaise module yet.
+The fitter_module code works but only prints results to terminal. Therefore, use carefully on few event samples only.
 
 ## Files:
 
