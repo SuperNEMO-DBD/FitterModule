@@ -185,7 +185,60 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
       std::vector<BrokenLineFit> bres = snf.fitbrokenline();
 
       // try to do something with the results
+      // Line first
+      for (LineFit entry : lres) {
+	if (entry.status>1)
+	  std::cout << "This line fit failed with status " << entry.status  << std::endl;
+	else {
+	  std::cout << "Line fit: (status, chi2) " << entry.status << ", " << entry.chi2 << std::endl;
+	  std::cout << "slope, intercept in xy " << entry.slxy << ", " << entry.ixy << std::endl;
+	  std::cout << "errors in xy " << entry.errslxy << ", " << entry.errixy << std::endl;
+	  std::cout << "slope, intercept in xz " << entry.slxz << ", " << entry.ixz << std::endl;
+	  std::cout << "errors in xz " << entry.errslxz << ", " << entry.errixz << std::endl;
+	}
+      }
 
+      // Helix
+      for (HelixFit entry : hres) {
+	if (entry.status>1)
+	  std::cout << "This helix fit failed with status " << entry.status  << std::endl;
+	else {
+	  std::cout << "Helix fit: (status, chi2) " << entry.status << ", " << entry.chi2 << std::endl;
+	  std::cout << "radius and pitch " << entry.radius << ", " << entry.pitch << std::endl;
+	  std::cout << "errors in r, p " << entry.raderr << ", " << entry.errpitch << std::endl;
+	  std::cout << "centre (x,y,z) " << entry.xc << ", " << entry.yc << ", " << entry.zc << std::endl;
+	  std::cout << "centre errors " << entry.errxc << ", " << entry.erryc << ", " << entry.errzc << std::endl;
+	}
+      }
+
+      // Broken Line last
+      for (BrokenLineFit entry : bres) {
+	if (entry.status>1)
+	  std::cout << "This broken line fit failed with status " << entry.status  << std::endl;
+	else {
+	  LineFit lf = entry.linefit1;
+	  if (lf.chi2<0.0) { // just one linefit, no break
+	    std::cout << "Broken Line fit: (status, chi2) " << entry.status << ", " << entry.chi2 << std::endl;
+	    std::cout << "slope, intercept in xy " << lf.slxy << ", " << lf.ixy << std::endl;
+	    std::cout << "errors in xy " << lf.errslxy << ", " << lf.errixy << std::endl;
+	    std::cout << "slope, intercept in xz " << lf.slxz << ", " << lf.ixz << std::endl;
+	    std::cout << "errors in xz " << lf.errslxz << ", " << lf.errixz << std::endl;
+	  }
+	  else { // two lines fitted from break
+	    LineFit lf2 = entry.linefit2;
+	    std::cout << "Broken Line fit: (status, chi2) " << entry.status << ", " << entry.chi2 << std::endl;
+	    std::cout << "(1) slope, intercept in xy " << lf.slxy << ", " << lf.ixy << std::endl;
+	    std::cout << "(1) errors in xy " << lf.errslxy << ", " << lf.errixy << std::endl;
+	    std::cout << "(1) slope, intercept in xz " << lf.slxz << ", " << lf.ixz << std::endl;
+	    std::cout << "(1) errors in xz " << lf.errslxz << ", " << lf.errixz << std::endl;
+	    std::cout << "Second line " << std::endl;
+	    std::cout << "(2) slope, intercept in xy " << lf2.slxy << ", " << lf2.ixy << std::endl;
+	    std::cout << "(2) errors in xy " << lf2.errslxy << ", " << lf2.errixy << std::endl;
+	    std::cout << "(2) slope, intercept in xz " << lf2.slxz << ", " << lf2.ixz << std::endl;
+	    std::cout << "(2) errors in xz " << lf2.errslxz << ", " << lf2.errixz << std::endl;
+	  }
+	}
+      }
       rings.clear();
     }
   }
