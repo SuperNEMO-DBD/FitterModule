@@ -132,6 +132,7 @@ std::vector<LineFit> SNFitter::fitline() {
   std::vector<double> dummy;
   std::vector<double>::iterator mit;
   double leftright = grings.at(0).wirex;
+  int id = rings.at(0).clid;
   for (GeigerRing gg  : grings)
     dummy.push_back(gg.wirex);
   if (leftright>0)
@@ -178,6 +179,7 @@ std::vector<LineFit> SNFitter::fitline() {
     lf.status = result.Status(); // fit to ring in 2d status
     lf.chi2 = result.Chi2();
     lf.prob = result.Prob();
+    lf.clid = id;
     //    result.Print(std::cout);
 
     const double* bestfit = result.GetParams();
@@ -320,6 +322,7 @@ std::vector<HelixFit> SNFitter::fithelix() {
   HelixDistance2 hdist(&grings);
   ROOT::Math::Functor fcn(hdist,5);
 
+  int id = rings.at(0).clid;
   std::vector<double> res = helix_initials();
   if (res.size()<1) {// not a helix in wires, make some up
     res.clear();
@@ -352,6 +355,7 @@ std::vector<HelixFit> SNFitter::fithelix() {
   hf.status = result.Status();
   hf.chi2 = result.Chi2();
   hf.prob = result.Prob();
+  hf.clid = id;
   
   const double* bestfit = result.GetParams();
   const double* errors = result.GetErrors();
@@ -488,6 +492,7 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
   BrokenLineFit blf;
   LineFit lf;
   LineFit backup;
+  int id = rings.at(0).clid;
 
   PathFinder pf(rings);
   pf.create_paths(); // make all the tangent point data paths for fitting
@@ -537,7 +542,8 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
     blf.status = result.Status(); // fit to ring in 2d status
     blf.chi2 = result.Chi2();
     blf.prob = result.Prob();
-    
+    blf.clid = id;
+   
     //    result.Print(std::cout);
     
     // check for break points for at least 5 or more angles

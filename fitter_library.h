@@ -53,6 +53,7 @@ struct PathPointCollection {
 struct TrackerHit {
   // full tracker hit info
   // unique to each
+  int clid;
   GeigerRing gr;
   MetaInfo mi;
 };
@@ -72,6 +73,7 @@ struct LineFit {
   double chi2;
   double prob;
   int status;
+  int clid;
 };
 
 // helix fit store, 5 parameter with errors
@@ -91,6 +93,7 @@ struct HelixFit {
   double chi2;
   double prob;
   int status;
+  int clid;
 };
 
 // broken line fit store, 4 parameter with errors and break
@@ -105,6 +108,7 @@ struct BrokenLineFit {
   double chi2;
   double prob;
   int status;
+  int clid;
 };
 
 

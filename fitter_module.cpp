@@ -163,7 +163,8 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
 
     for (auto cl_handle : defaults) {
       const sdm::calibrated_tracker_hit::collection_type & gg_hits_col = cl_handle.get().get_hits();
-      std::cout << "cluster number: " << ++ncl << std::endl;
+      ncl = cl_handle.get().get_cluster_id();
+      std::cout << "cluster number: " << ncl << std::endl;
 
       rings.clear();
       std::cout << "number of gg hits: " << gg_hits_col.size() << std::endl;
@@ -180,6 +181,7 @@ dpp::base_module::process_status fitter_module::process(datatools::things & data
 	mi.side   = hit.get_side();
 	mi.row    = hit.get_row();
 	mi.column = hit.get_layer();
+	th.clid = ncl;
 	th.mi = mi;
 	th.gr = ring;
 	rings.push_back(th);

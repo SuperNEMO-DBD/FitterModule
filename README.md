@@ -1,7 +1,7 @@
 # Fitting module readme
 
 Yorck Ramachers (Warwick)
-Last updated July 9, 2019
+Last updated July 11, 2019
 
 The Fitter module is a SuperNEMO reconstruction module. It attempts to
 fit clustered tracker hits and fill the TTD data bank in Falaise in the current
@@ -143,6 +143,7 @@ LineFit structure:
 - Chi2 (double)
 - Probability (double)
 - Fit status (integer)
+- cluster id (integer)
 
 HelixFit structure:
 - 5 best fit parameter (double), radius, pitch, centre (x,y,z)
@@ -150,6 +151,7 @@ HelixFit structure:
 - Chi2 (double)
 - Probability (double)
 - Fit status (integer)
+- cluster id (integer)
 
 BrokenLineFit structure:
 - 2 LineFit structures with the second potentially empty
@@ -160,6 +162,7 @@ BrokenLineFit structure:
 - Chi2 (double)
 - Probability (double)
 - Fit status (integer)
+- cluster id (integer)
 
 PathPoint stucture:
 - 3 tangent point coordinates (double)
