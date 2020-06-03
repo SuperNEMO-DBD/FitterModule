@@ -1,9 +1,8 @@
-#include "catch.hpp"
-#include <fitter_library.h>
-#include <TTreeReader.h>
 #include <TFile.h>
+#include <TTreeReader.h>
+#include <fitter_library.h>
 #include <vector>
-
+#include "catch.hpp"
 
 int readrun() {
   // input reader
@@ -22,27 +21,26 @@ int readrun() {
   std::vector<TrackerHit> rings;
   SNFitter snf;
   int endevent = reader.GetEntries(true);
-  for (int i=0; i<endevent; i++) { // event loop
-    reader.Next(); // all data available
-    for (unsigned int j=0;j<radius->size();j++) {
-      ring.rerr   = 0.9;
+  for (int i = 0; i < endevent; i++) {  // event loop
+    reader.Next();                      // all data available
+    for (unsigned int j = 0; j < radius->size(); j++) {
+      ring.rerr = 0.9;
       ring.zerr = 10.0;
       ring.radius = radius->at(j);
-      ring.wirex  = wirex->at(j);
-      ring.wirey  = wirey->at(j);
+      ring.wirex = wirex->at(j);
+      ring.wirey = wirey->at(j);
       ring.zcoord = wirez->at(j);
       th.gr = ring;
       rings.push_back(th);
     }
     snf.setData(rings);
     std::vector<LineFit> res = snf.fitline();
-    
+
     for (LineFit entry : res) {
-      if (entry.status>1)
-	some++;
+      if (entry.status > 1) some++;
     }
-    if (some==4) {
-      counter++; // no valid fit
+    if (some == 4) {
+      counter++;  // no valid fit
     }
     some = 0;
     rings.clear();
@@ -50,14 +48,6 @@ int readrun() {
   return counter;
 }
 
+int check_run() { return readrun(); }
 
-int check_run(){
-  return readrun();
-}
-
-
-
-TEST_CASE( "Line", "[falaise][linefilerun]" ) {
-  REQUIRE( check_run() == 0 );
-}
-
+TEST_CASE("Line", "[falaise][linefilerun]") { REQUIRE(check_run() == 0); }

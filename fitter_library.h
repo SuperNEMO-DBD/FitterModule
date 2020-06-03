@@ -2,12 +2,12 @@
 #define YR_SNFitter
 
 // std libraries
-#include <vector>
 #include <utility>
+#include <vector>
 
 // ROOT includes
-#include <Math/Vector3D.h>
 #include <Math/Vector2D.h>
+#include <Math/Vector3D.h>
 #include <TMath.h>
 #include <TVector3.h>
 
@@ -15,8 +15,8 @@
 struct MetaInfo {
   // uniquely tag a geiger hit
   int hitid;
-  int side; 
-  int row; 
+  int side;
+  int row;
   int column;
 };
 
@@ -33,7 +33,7 @@ struct GeigerRing {
 // path point store
 struct PathPoint {
   // just a 3D point with errors for simple fitting
-  std::pair<int,size_t> pointid;
+  std::pair<int, size_t> pointid;
   double xc;
   double yc;
   double zc;
@@ -42,13 +42,11 @@ struct PathPoint {
   double errz;
 };
 
-
 // complete path storage
 struct PathPointCollection {
-  double length; // path length in Euclidean metric
+  double length;  // path length in Euclidean metric
   std::vector<PathPoint> path;
 };
-
 
 struct TrackerHit {
   // full tracker hit info
@@ -98,126 +96,121 @@ struct HelixFit {
 
 // broken line fit store, 4 parameter with errors and break
 struct BrokenLineFit {
-  LineFit linefit1; // has its own diagnostics
-  LineFit linefit2; // could be empty
-  std::vector<int> breakpoints; // first and last of interest
+  LineFit linefit1;              // has its own diagnostics
+  LineFit linefit2;              // could be empty
+  std::vector<int> breakpoints;  // first and last of interest
   // fit diagnostics for full BL fit
   std::vector<double> angles;
   std::vector<PathPoint> path;
-  double length; // path length in Euclidean metric
+  double length;  // path length in Euclidean metric
   double chi2;
   double prob;
   int status;
   int clid;
 };
 
-
-
 // function Object to be minimized
 class LineDistance2 {
   // data member
  private:
   std::vector<GeigerRing>* frings;
-  
- protected: 
-  double linedistance(GeigerRing gr, const double *p); // calculate distance line-cylinder
-  
+
+ protected:
+  double linedistance(GeigerRing gr, const double* p);  // calculate distance line-cylinder
+
  public:
- LineDistance2(std::vector<GeigerRing> * g) : frings(g) { }
-  ~LineDistance2() { }
-  
+  LineDistance2(std::vector<GeigerRing>* g) : frings(g) {}
+  ~LineDistance2() {}
+
   // implementation of the function to be minimized
-  double operator() (const double * par) {
+  double operator()(const double* par) {
     double sum = 0.0;
     for (GeigerRing entry : *frings) {
       double d = linedistance(entry, par);
-      sum += d*d; // squared weighted distance
+      sum += d * d;  // squared weighted distance
     }
     return sum;
   }
-  
 };
-
 
 // function Object to be minimized
 class HelixDistance2 {
   // data member
  private:
   std::vector<GeigerRing>* frings;
-  
- protected: 
-  double helixdistance(GeigerRing gr, const double *p); // calculate distance helix-cylinder
-  
+
+ protected:
+  double helixdistance(GeigerRing gr, const double* p);  // calculate distance helix-cylinder
+
  public:
- HelixDistance2(std::vector<GeigerRing> * g) : frings(g) {}
-  ~HelixDistance2() { }
-  
+  HelixDistance2(std::vector<GeigerRing>* g) : frings(g) {}
+  ~HelixDistance2() {}
+
   // implementation of the function to be minimized
-  double operator() (const double * par) {
+  double operator()(const double* par) {
     double sum = 0.0;
     for (GeigerRing entry : *frings) {
       double d = helixdistance(entry, par);
-      sum += d*d; // squared weighted distance
+      sum += d * d;  // squared weighted distance
     }
     return sum;
   }
-  
 };
-
 
 // *** Broken Line section
 // ***********************
 // function Object to be minimized
 class BLDistance2 {
   // data member
-private:
+ private:
   std::vector<PathPoint>* fdata;
   std::vector<double> angles;
   std::vector<double> errangles;
-  
-  double bldistance(PathPoint pp, const double *p, ROOT::Math::XYZVector& model, ROOT::Math::XYZVector& weight) {
+
+  double bldistance(PathPoint pp, const double* p, ROOT::Math::XYZVector& model,
+                    ROOT::Math::XYZVector& weight) {
     // distance line ring is D= | (xp-x0) cross  ux | - r
     // where ux is direction of line and x0 is a point on the line (like t = 0)
     // line not parallel to y-z plane, i.e calo plane
     double x = pp.xc;
     double y = pp.yc;
     double z = pp.zc;
-    
-    ROOT::Math::XYZVector xp(x,y,z);
+
+    ROOT::Math::XYZVector xp(x, y, z);
     ROOT::Math::XYZVector x0(0., p[0], p[2]);
     ROOT::Math::XYZVector x1(1., p[0] + p[1], p[2] + p[3]);
-    ROOT::Math::XYZVector u = (x1-x0).Unit();
-    ROOT::Math::XYZVector dvec = (xp-x0).Cross(u);
-    
+    ROOT::Math::XYZVector u = (x1 - x0).Unit();
+    ROOT::Math::XYZVector dvec = (xp - x0).Cross(u);
+
     // errors from xp in cross product
-    model = xp + dvec; // to return from the function
-    weight.SetXYZ((pp.erry*u.Z()*pp.erry*u.Z())+(pp.errz*u.Y()*pp.errz*u.Y()),
-		  (pp.errx*u.Z()*pp.errx*u.Z())+(pp.errz*u.X()*pp.errz*u.X()),
-		  (pp.errx*u.Y()*pp.errx*u.Y())+(pp.erry*u.X()*pp.erry*u.X())); // weight sqr vector
-    
+    model = xp + dvec;  // to return from the function
+    weight.SetXYZ((pp.erry * u.Z() * pp.erry * u.Z()) + (pp.errz * u.Y() * pp.errz * u.Y()),
+                  (pp.errx * u.Z() * pp.errx * u.Z()) + (pp.errz * u.X() * pp.errz * u.X()),
+                  (pp.errx * u.Y() * pp.errx * u.Y()) +
+                      (pp.erry * u.X() * pp.erry * u.X()));  // weight sqr vector
+
     double d2 = dvec.Mag2();
-    double w2 = weight.X() + weight.Y() + weight.Z(); // sum of squares is .Mag2()
+    double w2 = weight.X() + weight.Y() + weight.Z();  // sum of squares is .Mag2()
     return d2 / w2;
   }
-  
-  
+
   std::vector<double> calculate_beta(const double* par) {
     // needs TVector3 objects internally for angles
     std::vector<double> beta;
-    ROOT::Math::XYZVector um1(0,0,0); // to be overwritten
-    ROOT::Math::XYZVector ui(0,0,0); // in bldistance
-    ROOT::Math::XYZVector up1(0,0,0); // function
-    ROOT::Math::XYZVector dweight(0,0,0); // dummy, not needed here
-    for (unsigned int j=1;j<fdata->size()-1;j++) { // N-2 angles
-      double d1 = bldistance(fdata->at(j-1), par, um1, dweight); // ordered path points assumed
+    ROOT::Math::XYZVector um1(0, 0, 0);                             // to be overwritten
+    ROOT::Math::XYZVector ui(0, 0, 0);                              // in bldistance
+    ROOT::Math::XYZVector up1(0, 0, 0);                             // function
+    ROOT::Math::XYZVector dweight(0, 0, 0);                         // dummy, not needed here
+    for (unsigned int j = 1; j < fdata->size() - 1; j++) {          // N-2 angles
+      double d1 = bldistance(fdata->at(j - 1), par, um1, dweight);  // ordered path points assumed
       double d2 = bldistance(fdata->at(j), par, ui, dweight);
-      double d3 = bldistance(fdata->at(j+1), par, up1, dweight);
-      
-      TVector3 v1((ui-um1).X(),(ui-um1).Y(),(ui-um1).Z()); // make a tvector3
-      TVector3 v2((up1-ui).X(),(up1-ui).Y(),(up1-ui).Z()); // make a tvector3
+      double d3 = bldistance(fdata->at(j + 1), par, up1, dweight);
+
+      TVector3 v1((ui - um1).X(), (ui - um1).Y(), (ui - um1).Z());  // make a tvector3
+      TVector3 v2((up1 - ui).X(), (up1 - ui).Y(), (up1 - ui).Z());  // make a tvector3
       double angle = v2.Angle(v1);
-      if (fabs(angle) > TMath::Pi()/2.0) // backward to forward hemisphere
-	angle -= TMath::Pi();
+      if (fabs(angle) > TMath::Pi() / 2.0)  // backward to forward hemisphere
+        angle -= TMath::Pi();
       beta.push_back(angle);
       // cout << "bestfit angle check: " << endl;
       // cout << "v1 = (" << v1.x() << ", " << v1.y() << ", " << v1.z() << ")" << endl;
@@ -226,21 +219,20 @@ private:
     }
     return beta;
   }
-  
-  
+
   std::vector<double> calculate_angle_errors(const double* par) {
     // needs TVector3 objects internally for angles
     std::vector<double> errbeta;
-    ROOT::Math::XYZVector um1(0,0,0); // to be overwritten
-    ROOT::Math::XYZVector ui(0,0,0); // in bldistance
-    ROOT::Math::XYZVector up1(0,0,0); // function
-    ROOT::Math::XYZVector w1(0,0,0);
-    ROOT::Math::XYZVector w2(0,0,0);
-    ROOT::Math::XYZVector w3(0,0,0);
-    for (unsigned int j=1;j<fdata->size()-1;j++) { // N-2 errors
-      PathPoint pp1 = fdata->at(j-1);
+    ROOT::Math::XYZVector um1(0, 0, 0);  // to be overwritten
+    ROOT::Math::XYZVector ui(0, 0, 0);   // in bldistance
+    ROOT::Math::XYZVector up1(0, 0, 0);  // function
+    ROOT::Math::XYZVector w1(0, 0, 0);
+    ROOT::Math::XYZVector w2(0, 0, 0);
+    ROOT::Math::XYZVector w3(0, 0, 0);
+    for (unsigned int j = 1; j < fdata->size() - 1; j++) {  // N-2 errors
+      PathPoint pp1 = fdata->at(j - 1);
       PathPoint pp2 = fdata->at(j);
-      PathPoint pp3 = fdata->at(j+1);
+      PathPoint pp3 = fdata->at(j + 1);
       // residual and error square on connection vector
       double d1 = bldistance(pp1, par, um1, w1);
       double d2 = bldistance(pp2, par, ui, w2);
@@ -250,67 +242,62 @@ private:
       ROOT::Math::XYZVector dv2 = w2 + w3;
       // prepare the error on the single angle
       // from acos(v1.v2/|v1||v2|)
-      TVector3 v1((ui-um1).X(),(ui-um1).Y(),(ui-um1).Z()); // make a tvector3
-      TVector3 v2((up1-ui).X(),(up1-ui).Y(),(up1-ui).Z()); // make a tvector3
+      TVector3 v1((ui - um1).X(), (ui - um1).Y(), (ui - um1).Z());  // make a tvector3
+      TVector3 v2((up1 - ui).X(), (up1 - ui).Y(), (up1 - ui).Z());  // make a tvector3
       double angle = v2.Angle(v1);
-      if (angle > TMath::Pi()/2.0) // backward to forward hemisphere
-	angle -= TMath::Pi();
+      if (angle > TMath::Pi() / 2.0)  // backward to forward hemisphere
+        angle -= TMath::Pi();
       double constant = fabs(TMath::Sin(angle));
       // denominators
       double denom1 = v1.Mag() * v2.Mag();
-      double denom2 = v1.Mag()*v1.Mag()*v1.Mag() * v2.Mag();
-      double denom3 = v1.Mag() * v2.Mag()*v2.Mag()*v2.Mag();
+      double denom2 = v1.Mag() * v1.Mag() * v1.Mag() * v2.Mag();
+      double denom3 = v1.Mag() * v2.Mag() * v2.Mag() * v2.Mag();
       // derivative terms for v1 and v2
-      double tv1x = v2.x()/denom1 - v1.x()*(v1.Dot(v2))/denom2; 
-      double tv1y = v2.y()/denom1 - v1.y()*(v1.Dot(v2))/denom2; 
-      double tv1z = v2.z()/denom1 - v1.z()*(v1.Dot(v2))/denom2;
-      double tv2x = v1.x()/denom1 - v2.x()*(v1.Dot(v2))/denom3; 
-      double tv2y = v1.y()/denom1 - v2.y()*(v1.Dot(v2))/denom3; 
-      double tv2z = v1.z()/denom1 - v2.z()*(v1.Dot(v2))/denom3; 
+      double tv1x = v2.x() / denom1 - v1.x() * (v1.Dot(v2)) / denom2;
+      double tv1y = v2.y() / denom1 - v1.y() * (v1.Dot(v2)) / denom2;
+      double tv1z = v2.z() / denom1 - v1.z() * (v1.Dot(v2)) / denom2;
+      double tv2x = v1.x() / denom1 - v2.x() * (v1.Dot(v2)) / denom3;
+      double tv2y = v1.y() / denom1 - v2.y() * (v1.Dot(v2)) / denom3;
+      double tv2z = v1.z() / denom1 - v2.z() * (v1.Dot(v2)) / denom3;
       // component error square terms
-      double cerrx = constant * (dv1.X() * tv1x*tv1x + dv2.X() * tv2x*tv2x);
-      double cerry = constant * (dv1.Y() * tv1y*tv1y + dv2.Y() * tv2y*tv2y);
-      double cerrz = constant * (dv1.Z() * tv1z*tv1z + dv2.Z() * tv2z*tv2z);
+      double cerrx = constant * (dv1.X() * tv1x * tv1x + dv2.X() * tv2x * tv2x);
+      double cerry = constant * (dv1.Y() * tv1y * tv1y + dv2.Y() * tv2y * tv2y);
+      double cerrz = constant * (dv1.Z() * tv1z * tv1z + dv2.Z() * tv2z * tv2z);
       double sinerr = TMath::Sqrt(cerrx + cerry + cerrz);
-      if (sinerr>1.0)
-	sinerr = 1.0;
+      if (sinerr > 1.0) sinerr = 1.0;
       double angle_error = TMath::ASin(sinerr);
-      if (angle_error < 1.0e-5)
-	angle_error = 1.0e-5;
+      if (angle_error < 1.0e-5) angle_error = 1.0e-5;
       errbeta.push_back(angle_error);
     }
     return errbeta;
   }
-  
-  
-public:
-  // constructor  
-  BLDistance2(std::vector<PathPoint> * g) : fdata(g) {}
-  
+
+ public:
+  // constructor
+  BLDistance2(std::vector<PathPoint>* g) : fdata(g) {}
+
   // implementation of the function to be minimized
-  double operator() (const double * par) {
+  double operator()(const double* par) {
     angles.clear();
     errangles.clear();
-    ROOT::Math::XYZVector dummy1(0,0,0); // not needed here
-    ROOT::Math::XYZVector dummy2(0,0,0); // but later inside angle functions
+    ROOT::Math::XYZVector dummy1(0, 0, 0);  // not needed here
+    ROOT::Math::XYZVector dummy2(0, 0, 0);  // but later inside angle functions
     double sum = 0;
     for (PathPoint entry : *fdata) {
       double d = bldistance(entry, par, dummy1, dummy2);
-      sum += d; // squared weighted distance
+      sum += d;  // squared weighted distance
     }
     // broken line angle contribution
     angles = calculate_beta(par);
     errangles = calculate_angle_errors(par);
-    for (unsigned int j=0;j<angles.size();j++) {
-      if (errangles.at(j) > 0.0)
-    	sum += angles.at(j)*angles.at(j) / errangles.at(j);
+    for (unsigned int j = 0; j < angles.size(); j++) {
+      if (errangles.at(j) > 0.0) sum += angles.at(j) * angles.at(j) / errangles.at(j);
     }
     return sum;
   }
-  std::vector<double> get_angles(const double* par) {return calculate_beta(par);}
-  std::vector<double> get_errors(const double* par) {return calculate_angle_errors(par);}
+  std::vector<double> get_angles(const double* par) { return calculate_beta(par); }
+  std::vector<double> get_errors(const double* par) { return calculate_angle_errors(par); }
 };
-
 
 // Usage as helper class: Create complex Graph nodes or edges
 // in a countable container independent of this graph class. Once finished
@@ -318,75 +305,67 @@ public:
 // all it takes is to use the unique element index in that container
 // to initate this graph and use it entirely with integers throughout.
 // Weights can be doubles representing space distances between nodes.
-// Any result from here can then address complex objects in their 
-// container by index, again outside this class. 
-class WeightedGraph
-{
+// Any result from here can then address complex objects in their
+// container by index, again outside this class.
+class WeightedGraph {
   // undirected, weighted graph object using integers as Node identifiers
   // for simple usage as a pure helper class.
-private:
-  int V; // number of vertices
+ private:
+  int V;  // number of vertices
   // Our adjacency list.
   std::vector<std::vector<std::pair<int, double> > > adjList;
-  std::vector<std::pair<double, int> > dist; // First is dist, second is the previous node.
-  std::vector<int> sPath; // result path
-  
-  
-public:
-  
-  WeightedGraph(int nv); // Constructor with number of vertices
-  
-  void addEdge(int v, int w, double weight); // function to add an edge to graph
-  bool isReachable(int s, int d); // returns true if there is a path from s to d
-  double dijkstraPaths(int start, int target); // all paths between s and t
-  std::vector<int> path() {return sPath;} 
+  std::vector<std::pair<double, int> > dist;  // First is dist, second is the previous node.
+  std::vector<int> sPath;                     // result path
+
+ public:
+  WeightedGraph(int nv);  // Constructor with number of vertices
+
+  void addEdge(int v, int w, double weight);    // function to add an edge to graph
+  bool isReachable(int s, int d);               // returns true if there is a path from s to d
+  double dijkstraPaths(int start, int target);  // all paths between s and t
+  std::vector<int> path() { return sPath; }
 };
 
-class Interval
-{
+class Interval {
   // simple interval mostly for convenience
   // on checking pairs of doubles
   // on rings for overlap
-private:
+ private:
   double lower;
   double upper;
-  
-  
-protected:
-  int checkforPiHalf(double& angle); // on ring beyond pi/2 angle, get sign problems
 
+ protected:
+  int checkforPiHalf(double& angle);  // on ring beyond pi/2 angle, get sign problems
 
-public:
-  
-  Interval(); // Default Constructor
-  Interval(double s, double e); // Constructor with lower and upper limit
-  
-  Interval hull(Interval other); // return interval containing both this and other
-  double midinterval() {return 0.5*(lower+upper);} // mean interval value
-  double angle_midinterval(); // mean angular interval value
-  double angle_dphi(); // half width with angles
-  double from() {return lower;} // boundary return
-  double to() {return upper;} // boundary return
-  bool empty() {return lower == upper;} // check for empty interval
-  bool overlap(Interval other); // return true if overlap exists
-  bool angle_overlap(Interval other); // for intervals on a circle
-    
+ public:
+  Interval();                    // Default Constructor
+  Interval(double s, double e);  // Constructor with lower and upper limit
+
+  Interval hull(Interval other);  // return interval containing both this and other
+  double midinterval() { return 0.5 * (lower + upper); }  // mean interval value
+  double angle_midinterval();                             // mean angular interval value
+  double angle_dphi();                                    // half width with angles
+  double from() { return lower; }                         // boundary return
+  double to() { return upper; }                           // boundary return
+  bool empty() { return lower == upper; }                 // check for empty interval
+  bool overlap(Interval other);                           // return true if overlap exists
+  bool angle_overlap(Interval other);                     // for intervals on a circle
 };
 
-class RelationalHit
-{
+class RelationalHit {
   // A TrackerHit in relation to another TrackerHit
   // where the relevant relation is expressed in
-  // tangent point intervals, i.e. the error interval 
-  // around each tangent point. Such error intervals 
+  // tangent point intervals, i.e. the error interval
+  // around each tangent point. Such error intervals
   // can overlap and hence merge.
-private:
+ private:
   TrackerHit host;
   TrackerHit guest;
-  std::vector<std::pair<ROOT::Math::XYVector, ROOT::Math::XYVector> > onthis; // node position and error interval
-  std::vector<std::pair<ROOT::Math::XYVector, ROOT::Math::XYVector> > onother; // on the two ring
-  std::vector<std::pair<int, int> > hostnode_map; // node indices mapping from, to
-  std::vector<std::pair<int, int> > guestnode_map; // node indices mapping from, to
+  std::vector<std::pair<ROOT::Math::XYVector, ROOT::Math::XYVector> >
+      onthis;  // node position and error interval
+  std::vector<std::pair<ROOT::Math::XYVector, ROOT::Math::XYVector> > onother;  // on the two ring
+  std::vector<std::pair<int, int> > hostnode_map;   // node indices mapping from, to
+  std::vector<std::pair<int, int> > guestnode_map;  // node indices mapping from, to
   struct InternalStore {
     double xa;
     double ya;
@@ -399,14 +378,14 @@ private:
     int order;
   } intern;
 
-  std::pair<ROOT::Math::XYVector, ROOT::Math::XYVector> TP_pair; // point pair
-  std::pair<Interval, Interval> TP_error; // angle error interval pair
-  std::vector<ROOT::Math::XYVector> allhost_points; // point collection
-  std::vector<ROOT::Math::XYVector> allguest_points; // point collection
-  std::vector<Interval> allhost_errors; // error in x=radial, y=dphi
-  std::vector<Interval> allguest_errors; // error in x=radial, y=dphi
-  std::vector<PathPoint> hostnodes; // handing back 3D point with errors
-  std::vector<PathPoint> guestnodes; // handing back 3D point with errors
+  std::pair<ROOT::Math::XYVector, ROOT::Math::XYVector> TP_pair;  // point pair
+  std::pair<Interval, Interval> TP_error;                         // angle error interval pair
+  std::vector<ROOT::Math::XYVector> allhost_points;               // point collection
+  std::vector<ROOT::Math::XYVector> allguest_points;              // point collection
+  std::vector<Interval> allhost_errors;                           // error in x=radial, y=dphi
+  std::vector<Interval> allguest_errors;                          // error in x=radial, y=dphi
+  std::vector<PathPoint> hostnodes;   // handing back 3D point with errors
+  std::vector<PathPoint> guestnodes;  // handing back 3D point with errors
 
   // case handling
   void calculate_overlapping(double distance);
@@ -416,7 +395,7 @@ private:
   void equal_rings(double distance, bool oflag);
   void intersectioncalc(double distance);
   // initiate case handling
-  void size_sorting(); // sets internal store
+  void size_sorting();  // sets internal store
   // general tangent point calculators
   void pointcalc(double xw, double yw, double rad, double h, double xo, double yo);
   void calc_onvertical(double xw, double yw, double rad, double h, double xo, double yo);
@@ -425,43 +404,43 @@ private:
   int checkforpihalf(double& angle);
   double checkforpi(double angle);
   double check_subtraction(double r, double dr);
-  std::vector<Interval> deltaxy_to_deltaphi(std::vector<ROOT::Math::XYVector> xy, std::vector<ROOT::Math::XYVector> dxdy, std::vector<ROOT::Math::XYVector> ctr); // conversion to error on ring
-  ROOT::Math::XYVector rphitoxy(ROOT::Math::XYVector tp, ROOT::Math::XYVector ctr, double r, double dr, double dphi);
+  std::vector<Interval> deltaxy_to_deltaphi(
+      std::vector<ROOT::Math::XYVector> xy, std::vector<ROOT::Math::XYVector> dxdy,
+      std::vector<ROOT::Math::XYVector> ctr);  // conversion to error on ring
+  ROOT::Math::XYVector rphitoxy(ROOT::Math::XYVector tp, ROOT::Math::XYVector ctr, double r,
+                                double dr, double dphi);
 
-
-protected:
+ protected:
   void calculate_tangentpoints();
   void create_maps();
 
+ public:
+  RelationalHit() { ; }                             // default constructor
+  RelationalHit(TrackerHit hit, TrackerHit other);  // Constructor
 
-public:
-  RelationalHit() {;} // default constructor
-  RelationalHit(TrackerHit hit, TrackerHit other); // Constructor
+  MetaInfo get_hostid() { return host.mi; }    // identify host tracker hit with unique meta info
+  MetaInfo get_guestid() { return guest.mi; }  // identify guest tracker hit with unique meta info
+  std::vector<PathPoint> nodes_host() { return hostnodes; }
+  std::vector<PathPoint> nodes_guest() { return guestnodes; }
 
-  MetaInfo get_hostid() {return host.mi;} // identify host tracker hit with unique meta info
-  MetaInfo get_guestid() {return guest.mi;} // identify guest tracker hit with unique meta info
-  std::vector<PathPoint> nodes_host() {return hostnodes;}
-  std::vector<PathPoint> nodes_guest() {return guestnodes;}
-
-  std::vector<std::pair<int, int> > get_edges(); // countable, for the path graph eventually
+  std::vector<std::pair<int, int> > get_edges();  // countable, for the path graph eventually
 };
 
-class PathFinder
-{
+class PathFinder {
   // Input all the TrackerHits in the event
   // creates a RelationalHit collection and sorts through them
   // in order to make the full list of all available edges
   // which then give a graph. Shortest paths result from that
-  // graph and that results in data made up of points in 3D 
+  // graph and that results in data made up of points in 3D
   // with errors that can be fit, e.g. with the broken line fitter.
-private:
+ private:
   int width;
   int height;
   std::vector<TrackerHit> hits;
   std::vector<PathPointCollection> paths;
-  std::vector<std::pair<int, int> > edges; // node connections with indices
-  std::vector<PathPoint> ordered_points; // node order for reverse translating 
-  std::vector<std::pair<PathPoint, PathPoint> > related_points; // edge data points
+  std::vector<std::pair<int, int> > edges;  // node connections with indices
+  std::vector<PathPoint> ordered_points;    // node order for reverse translating
+  std::vector<std::pair<PathPoint, PathPoint> > related_points;  // edge data points
   std::vector<RelationalHit> allpairs;
   // internal functions
   bool overlap_x(PathPoint p1, PathPoint p2);
@@ -471,31 +450,26 @@ private:
   size_t make_ahash(PathPoint pp);
   std::vector<int> column_hits(int col);
 
-
-protected:
+ protected:
   void make_edges();
   void find_paths();
   void clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > im);
   bool has_overlap(PathPoint p1, PathPoint p2);
-  bool is_neighbour(TrackerHit start, TrackerHit target);  
+  bool is_neighbour(TrackerHit start, TrackerHit target);
 
+ public:
+  PathFinder(std::vector<TrackerHit> th);  // Constructor
 
-public:
-  PathFinder(std::vector<TrackerHit> th); // Constructor
-  
-  void create_paths(); // initialization for all calculations
-  std::vector<PathPointCollection> allpaths() {return paths;}
+  void create_paths();  // initialization for all calculations
+  std::vector<PathPointCollection> allpaths() { return paths; }
 };
-
-
 
 // General fitter class with line and helix fitting methods
 class SNFitter {
-
  private:
   std::vector<TrackerHit> rings;
   std::vector<GeigerRing> grings;
-  
+
  protected:
   std::vector<double> line_initials(double frad);
   std::vector<double> helix_initials();
@@ -504,20 +478,26 @@ class SNFitter {
   LineFit fitline2D(std::vector<PathPoint> data);
   bool peak_alarm(std::vector<double> betaangles);
   double martingale(double previous, double val, double alpha);
-    
-  
+
  public:
- SNFitter() {rings.clear(); grings.clear();} // default Constructor
- SNFitter(std::vector<TrackerHit> th) : rings(th) {for (auto& hit : rings) grings.push_back(hit.gr);} // Constructor
-  ~SNFitter() {
+  SNFitter() {
     rings.clear();
+    grings.clear();
+  }  // default Constructor
+  SNFitter(std::vector<TrackerHit> th) : rings(th) {
+    for (auto& hit : rings) grings.push_back(hit.gr);
+  }  // Constructor
+  ~SNFitter() { rings.clear(); }
+
+  void setData(std::vector<TrackerHit> th) {
+    rings.clear();
+    grings.clear();
+    rings = th;
+    for (auto& hit : rings) grings.push_back(hit.gr);
   }
-  
-  void setData(std::vector<TrackerHit> th) {rings.clear(); grings.clear(); rings = th; for (auto& hit : rings) grings.push_back(hit.gr);}
-  std::vector<LineFit> fitline(); // sets the data and operates
+  std::vector<LineFit> fitline();  // sets the data and operates
   std::vector<HelixFit> fithelix();
   std::vector<BrokenLineFit> fitbrokenline();
 };
-
 
 #endif
