@@ -6,7 +6,7 @@
 
 int readrun() {
   // input reader
-  TFile* ff = new TFile("../testing/idealline1000.root");
+  auto* ff = new TFile("../testing/idealline1000.root");
   TTreeReader reader("hit_tree", ff);
   // obtain all the required input data from file
   TTreeReaderValue<std::vector<double>> radius(reader, "radius");
@@ -43,7 +43,9 @@ int readrun() {
       rings.push_back(th);
     }
     snf.setData(rings);
-    if (snf.fitbrokenline().empty()) counter++;
+    if (snf.fitbrokenline().empty()) {
+      counter++;
+    }
     rings.clear();
   }
   return counter;

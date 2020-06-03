@@ -6,7 +6,7 @@
 
 int readrun() {
   // input reader
-  TFile* ff = new TFile("../testing/idealline1000.root");
+  auto* ff = new TFile("../testing/idealline1000.root");
   TTreeReader reader("hit_tree", ff);
   // obtain all the required input data from file
   TTreeReaderValue<std::vector<double>> radius(reader, "radius");
@@ -37,7 +37,9 @@ int readrun() {
     std::vector<LineFit> res = snf.fitline();
 
     for (LineFit entry : res) {
-      if (entry.status > 1) some++;
+      if (entry.status > 1) {
+        some++;
+      }
     }
     if (some == 4) {
       counter++;  // no valid fit

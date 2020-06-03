@@ -216,7 +216,9 @@ bool check_linepath() {
   bool fails = true;
   std::vector<PathPointCollection> ppc = testPF();
   double l = ppc.at(0).length;
-  if (l < 87.44 && l > 87.42) fails = false;
+  if (l < 87.44 && l > 87.42) {
+    fails = false;
+  }
   return fails;
 }
 
@@ -234,7 +236,9 @@ bool check_blpath() {
   bool fails = true;
   std::vector<PathPointCollection> ppc = testPFbl();
   double l = ppc.at(1).length;
-  if (l < 398.3 && l > 398.2) fails = false;
+  if (l < 398.3 && l > 398.2) {
+    fails = false;
+  }
   return fails;
 }
 

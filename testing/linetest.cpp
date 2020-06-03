@@ -9,11 +9,11 @@ std::vector<TrackerHit> lineA() {
   GeigerRing ring;
   TrackerHit th;
   std::vector<TrackerHit> rings;
-  for (unsigned int j = 0; j < 9; j++) {
+  for (double j : xset) {
     ring.rerr = 0.9;
     ring.zerr = 10.0;
     ring.radius = 10.0;
-    ring.wirex = xset[j];
+    ring.wirex = j;
     ring.wirey = 15.5;
     ring.zcoord = 1.0;
     th.gr = ring;
@@ -30,11 +30,11 @@ std::vector<TrackerHit> lineB() {
   GeigerRing ring;
   TrackerHit th;
   std::vector<TrackerHit> rings;
-  for (unsigned int j = 0; j < 9; j++) {
+  for (double j : xset) {
     ring.rerr = 0.9;
     ring.zerr = 11.0;
     ring.radius = 16.0;
-    ring.wirex = xset[j];
+    ring.wirex = j;
     ring.wirey = 15.5;
     ring.zcoord = 1.0;
     th.gr = ring;
@@ -72,8 +72,9 @@ int check_lineA() {
   int fails = 0;
   std::vector<LineFit> res = snf.fitline();
   for (LineFit lf : res) {  // should contain 4 candidates
-    if (lf.status > 0)      // 4 chances to fail
+    if (lf.status > 0) {    // 4 chances to fail
       fails++;
+    }
   }
   return fails;
 }
@@ -84,8 +85,9 @@ bool check_lineB() {
   SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline();
   for (LineFit lf : res) {               // should contain 4 candidates
-    if (lf.ixy > 31.0 && lf.ixy < 32.0)  // for one: near 31.5 with small error
+    if (lf.ixy > 31.0 && lf.ixy < 32.0) {  // for one: near 31.5 with small error
       found = true;
+    }
   }
   return found;
 }
@@ -96,8 +98,9 @@ bool check_lineC1() {
   SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline();
   for (LineFit lf : res) {                     // should contain 4 candidates
-    if (lf.slxy > 0.0591 && lf.slxy < 0.0592)  // for two cases: near 0.0591x
+    if (lf.slxy > 0.0591 && lf.slxy < 0.0592) {  // for two cases: near 0.0591x
       found = true;
+    }
   }
   return found;
 }
@@ -108,8 +111,9 @@ bool check_lineC2() {
   SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline();
   for (LineFit lf : res) {  // should contain 4 candidates
-    if (lf.chi2 >= 1.0e-6)  // for all: less than 1.0e-6 in tests
+    if (lf.chi2 >= 1.0e-6) {  // for all: less than 1.0e-6 in tests
       large = true;
+    }
   }
   return large;
 }
