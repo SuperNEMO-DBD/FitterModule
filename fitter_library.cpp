@@ -16,6 +16,7 @@
 #include <list>
 #include <queue>
 #include <set>
+#include <utility>
 #include <valarray>
 
 // *** Line section
@@ -78,13 +79,13 @@ std::vector<double> SNFitter::line_initials(double frad) {
   // provide options for x-y plane initials. X-Z plane not needed
   std::vector<double> results;
 
-  TLinearFitter* lfxy = new TLinearFitter();
+  auto* lfxy = new TLinearFitter();
   lfxy->SetFormula("pol1");
 
   unsigned int nd = grings.size();
-  double* xx = new double[nd];
-  double* yy = new double[nd];
-  double* ey = new double[nd];
+  auto* xx = new double[nd];
+  auto* yy = new double[nd];
+  auto* ey = new double[nd];
   for (unsigned int j = 0; j < nd; j++) {
     xx[j] = grings.at(j).wirex;
     yy[j] = grings.at(j).wirey;
@@ -131,11 +132,14 @@ std::vector<LineFit> SNFitter::fitline() {
   std::vector<double>::iterator mit;
   double leftright = grings.at(0).wirex;
   int id = rings.at(0).clid;
-  for (GeigerRing gg : grings) dummy.push_back(gg.wirex);
-  if (leftright > 0)
+  for (GeigerRing gg : grings) {
+    dummy.push_back(gg.wirex);
+  }
+  if (leftright > 0) {
     mit = std::min_element(dummy.begin(), dummy.end());
-  else
+  } else {
     mit = std::max_element(dummy.begin(), dummy.end());
+  }
 
   int idx = mit - dummy.begin();
   double first_radius = grings.at(idx).radius;
@@ -144,16 +148,16 @@ std::vector<LineFit> SNFitter::fitline() {
   std::vector<double> res = line_initials(first_radius);
   // for x-z plane
   unsigned int nd = grings.size();
-  double* xx = new double[nd];
-  double* zz = new double[nd];
-  double* ez = new double[nd];
+  auto* xx = new double[nd];
+  auto* zz = new double[nd];
+  auto* ez = new double[nd];
   for (unsigned int j = 0; j < nd; j++) {
     xx[j] = grings.at(j).wirex;
     zz[j] = grings.at(j).zcoord;
     ez[j] = grings.at(j).zerr;
   }
   // fit in x-z plane, once only
-  TLinearFitter* lfxz = new TLinearFitter();
+  auto* lfxz = new TLinearFitter();
   lfxz->SetFormula("pol1");
   lfxz->AssignData((int)nd, 1, xx, zz, ez);
   lfxz->Eval();
@@ -204,9 +208,9 @@ std::vector<double> SNFitter::helix_initials() {
   std::vector<double> results;
 
   unsigned int nd = grings.size();
-  double* xx = new double[nd];
-  double* yy = new double[nd];
-  double* zz = new double[nd];
+  auto* xx = new double[nd];
+  auto* yy = new double[nd];
+  auto* zz = new double[nd];
   for (unsigned int j = 0; j < nd; j++) {
     xx[j] = grings.at(j).wirex;
     yy[j] = grings.at(j).wirey;
@@ -243,30 +247,34 @@ std::vector<double> SNFitter::helix_initials() {
   double c2 = 0.5 * (svvv + suuv);
   double denominator = (suv * suv - suu * svv);  // prevent div by zero
 
-  if (fabs(denominator) < 1.0e-16)  // not a  helix but a line in wires
-    return results;                 // return empty as signal
+  if (fabs(denominator) < 1.0e-16) {  // not a  helix but a line in wires
+    return results;                   // return empty as signal
+  }
 
   double uc = (c2 * suv - c1 * svv) / denominator;
   double vc = (c1 * suv - c2 * suu) / denominator;
   double rad = uc * uc + vc * vc + (suu + svv) / nd;  // squared radius
   results.push_back(TMath::Sqrt(rad));                // helix parameter 0
 
-  TLinearFitter* lfxz = new TLinearFitter();
+  auto* lfxz = new TLinearFitter();
   lfxz->SetFormula("pol1");  // straight line x-z plane
   lfxz->AssignData((int)nd, 1, xx, zz);
   lfxz->Eval();
-  if (lfxz->GetParameter(1) > 0)  // up or down pitch
-    results.push_back(1.0);       // right sign
-  else
+  if (lfxz->GetParameter(1) > 0) {  // up or down pitch
+    results.push_back(1.0);         // right sign
+  } else {
     results.push_back(-1.0);  // right sign
+  }
 
   results.push_back(uc + meanx);  // centre x
   results.push_back(vc + meany);  // centre y
 
   std::vector<double> dummy;
-  for (GeigerRing gg : grings) dummy.push_back(gg.wirex);
-  std::vector<double>::iterator maxit = std::max_element(dummy.begin(), dummy.end());
-  std::vector<double>::iterator minit = std::min_element(dummy.begin(), dummy.end());
+  for (GeigerRing gg : grings) {
+    dummy.push_back(gg.wirex);
+  }
+  auto maxit = std::max_element(dummy.begin(), dummy.end());
+  auto minit = std::min_element(dummy.begin(), dummy.end());
   int maxidx = maxit - dummy.begin();
   int minidx = minit - dummy.begin();
   results.push_back(0.5 * (grings.at(maxidx).zcoord + grings.at(minidx).zcoord));  // z centre
@@ -282,9 +290,11 @@ std::vector<double> SNFitter::helix_initials() {
 std::vector<double> SNFitter::helixbackup() {
   std::vector<double> results;
   std::vector<double> dummy;
-  for (GeigerRing gg : grings) dummy.push_back(gg.wirex);
-  std::vector<double>::iterator maxit = std::max_element(dummy.begin(), dummy.end());
-  std::vector<double>::iterator minit = std::min_element(dummy.begin(), dummy.end());
+  for (GeigerRing gg : grings) {
+    dummy.push_back(gg.wirex);
+  }
+  auto maxit = std::max_element(dummy.begin(), dummy.end());
+  auto minit = std::min_element(dummy.begin(), dummy.end());
   int maxidx = maxit - dummy.begin();
   int minidx = minit - dummy.begin();
   double zmean = 0.5 * (grings.at(maxidx).zcoord + grings.at(minidx).zcoord);
@@ -292,17 +302,19 @@ std::vector<double> SNFitter::helixbackup() {
   // some guess dummy values
   results.push_back(100.0);  // r
 
-  if (zmean >= 0)            // up or down pitch
+  if (zmean >= 0) {          // up or down pitch
     results.push_back(1.0);  // h
-  else
+  } else {
     results.push_back(-1.0);
+  }
 
   results.push_back(0.0);  // xc
-  if (ymean >= 0)
+  if (ymean >= 0) {
     results.push_back(100.0);  // yc
-  else
+  } else {
     results.push_back(-100.0);  // yc
-  results.push_back(zmean);     // z centre
+  }
+  results.push_back(zmean);  // z centre
   return results;
 }
 
@@ -317,7 +329,7 @@ std::vector<HelixFit> SNFitter::fithelix() {
 
   int id = rings.at(0).clid;
   std::vector<double> res = helix_initials();
-  if (res.size() < 1) {  // not a helix in wires, make some up
+  if (res.empty()) {  // not a helix in wires, make some up
     res.clear();
     res = helixbackup();
   }
@@ -374,7 +386,9 @@ double SNFitter::martingale(double previous, double val, double alpha) {
 
 // change detect filter
 bool SNFitter::peak_alarm(std::vector<double> betaangles) {
-  if (betaangles.size() < 5) return false;  // pointless search
+  if (betaangles.size() < 5) {
+    return false;  // pointless search
+  }
   double alpha = 0.9;
   double threshold = 0.11;
   double prval = betaangles.front();  // first
@@ -382,8 +396,9 @@ bool SNFitter::peak_alarm(std::vector<double> betaangles) {
   unsigned int count = 0;
   for (double angle : betaangles) {
     double val = martingale(prval, angle, alpha);
-    if (fabs(val - prval) > threshold && count < len - 1)
+    if (fabs(val - prval) > threshold && count < len - 1) {
       return true;  // exclude final value kinks - dont' work with TSpectrum
+    }
     prval = val;
     count++;
   }
@@ -402,10 +417,11 @@ std::vector<int> SNFitter::kink_finder(std::vector<double> betaangles,
     hist->SetBinContent(i + 1, fabs(betaangles.at(i)));
     hist->SetBinError(i + 1, TMath::Sqrt(errangles.at(i)));
   }
-  TSpectrum* sp = new TSpectrum();
+  auto* sp = new TSpectrum();
   int npeaks = sp->Search(hist, 1, "goff", 0.9);  // 90% threshold for second peak
-  if (npeaks == 0)                                // try one more
+  if (npeaks == 0) {                              // try one more
     npeaks = sp->Search(hist, 2.0, "goff", 0.9);
+  }
   if (npeaks > 0) {
     double* peakpos = sp->GetPositionX();
     for (int j = 0; j < npeaks; j++) {
@@ -418,19 +434,19 @@ std::vector<int> SNFitter::kink_finder(std::vector<double> betaangles,
   return bins;
 }
 
-LineFit SNFitter::fitline2D(std::vector<PathPoint> data) {
+LineFit SNFitter::fitline2D(const std::vector<PathPoint>& data) {
   LineFit lf;
   // separate linear fits in xy and xz
   // good for initial conditions or separate broken line pieces
-  TLinearFitter* lfxy = new TLinearFitter();
-  TLinearFitter* lfxz = new TLinearFitter();
+  auto* lfxy = new TLinearFitter();
+  auto* lfxz = new TLinearFitter();
 
   int nd = (int)data.size();
-  double* xx = new double[nd];
-  double* yy = new double[nd];
-  double* zz = new double[nd];
-  double* ey = new double[nd];
-  double* ez = new double[nd];
+  auto* xx = new double[nd];
+  auto* yy = new double[nd];
+  auto* zz = new double[nd];
+  auto* ey = new double[nd];
+  auto* ez = new double[nd];
   int j = 0;
   for (PathPoint pp : data) {
     xx[j] = pp.xc;
@@ -490,7 +506,9 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
   PathFinder pf(rings);
   pf.create_paths();  // make all the tangent point data paths for fitting
   std::vector<PathPointCollection> pathcollection = pf.allpaths();
-  if (pathcollection.empty()) return results;  // return empty container
+  if (pathcollection.empty()) {
+    return results;  // return empty container
+  }
 
   ROOT::Fit::Fitter fitter;
   fitter.Config().SetDefaultMinimizer("Minuit2");
@@ -569,22 +587,28 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
         std::sort(blf.breakpoints.begin(),
                   blf.breakpoints.end());  // is vector<int>, ascending order
         int bin1 = blf.breakpoints.front();
-        if (bin1 < 2)  // have at least 2 points to fit to
+        if (bin1 < 2) {  // have at least 2 points to fit to
           bin1 += 2;
-        for (unsigned int i = 0; i < bin1; i++) foilside.push_back(ppc.path.at(i));
+        }
+        for (unsigned int i = 0; i < bin1; i++) {
+          foilside.push_back(ppc.path.at(i));
+        }
 
         int bin2 = blf.breakpoints.back();
-        if (bin2 < 2)  // have at least 2 points to fit to
+        if (bin2 < 2) {  // have at least 2 points to fit to
           bin2 += 2;
-        for (unsigned int i = ppc.path.size() - bin2; i < ppc.path.size(); i++)
+        }
+        for (unsigned int i = ppc.path.size() - bin2; i < ppc.path.size(); i++) {
           caloside.push_back(ppc.path.at(i));
+        }
 
         blf.linefit1 = fitline2D(foilside);
         blf.linefit2 = fitline2D(caloside);
       } else {  // exactly one break point
         int bin1 = blf.breakpoints.front();
-        if (bin1 < 2)  // have at least 2 points to fit to
+        if (bin1 < 2) {  // have at least 2 points to fit to
           bin1 += 2;
+        }
         //    	cout << "foil side rings: " << endl;
         for (unsigned int i = 0; i < bin1; i++) {
           foilside.push_back(ppc.path.at(i));
@@ -634,9 +658,9 @@ std::vector<BrokenLineFit> SNFitter::fitbrokenline() {
 // ** PathFinder methods
 // *****
 PathFinder::PathFinder(std::vector<TrackerHit> th) {
-  width = 9;     // set tracker columns, not going to change anytime soon
-  height = 113;  // tracker rows, needed for start/end point finding
-  hits = th;     // copy
+  width = 9;             // set tracker columns, not going to change anytime soon
+  height = 113;          // tracker rows, needed for start/end point finding
+  hits = std::move(th);  // copy
   // rest to be filled by methods
   paths.clear();
   allpairs.clear();
@@ -683,7 +707,9 @@ bool PathFinder::has_overlap(PathPoint p1, PathPoint p2) {
   if (p1.pointid != p2.pointid) {
     //    std::cout << "in overlap: x is " << overlap_x(p1, p2) << " and y is " << overlap_y(p1, p2)
     //    << std::endl;
-    if (overlap_x(p1, p2) && overlap_y(p1, p2)) return true;
+    if (overlap_x(p1, p2) && overlap_y(p1, p2)) {
+      return true;
+    }
   }
   return false;
 }
@@ -693,14 +719,18 @@ bool PathFinder::is_neighbour(TrackerHit start, TrackerHit target) {
   MetaInfo pptarget = target.mi;
 
   if (ppstart.column == pptarget.column &&
-      ppstart.row == pptarget.row)  // exclude itself as neighbour
+      ppstart.row == pptarget.row) {  // exclude itself as neighbour
     return false;
+  }
 
   // check grid x-y
-  if (fabs(ppstart.column - pptarget.column) < 2 &&
-      fabs(ppstart.row - pptarget.row) < 2)  // one grid place only
-    return true;
-  return false;
+  // if (fabs(ppstart.column - pptarget.column) < 2 &&
+  //    fabs(ppstart.row - pptarget.row) < 2) {  // one grid place only
+  //  return true;
+  //}
+  // return false;
+
+  return (fabs(ppstart.column - pptarget.column) < 2 && fabs(ppstart.row - pptarget.row) < 2);
 }
 
 size_t PathFinder::make_ahash(PathPoint pp) {
@@ -710,7 +740,9 @@ size_t PathFinder::make_ahash(PathPoint pp) {
 std::vector<int> PathFinder::column_hits(int col) {
   std::vector<int> found;
   std::vector<int> rows;
-  for (auto& hit : hits) rows.push_back(hit.mi.row);  // orders row integers, min to max
+  for (auto& hit : hits) {
+    rows.push_back(hit.mi.row);  // orders row integers, min to max
+  }
   std::sort(rows.begin(), rows.end());
   int minrow = rows.front();
   int maxrow = rows.back();
@@ -740,9 +772,12 @@ std::vector<int> PathFinder::column_hits(int col) {
   return columnpoints;
 }
 
-std::vector<int> PathFinder::find_allint(std::vector<PathPoint> myvector, int pint) {
+std::vector<int> PathFinder::find_allint(const std::vector<PathPoint>& myvector, int pint) {
   std::vector<int> temp;
-  for (auto& pp : myvector) temp.push_back(pp.pointid.first);  // collect all int hit ids
+  temp.reserve(myvector.size());
+  for (const auto& pp : myvector) {
+    temp.push_back(pp.pointid.first);  // collect all int hit ids
+  }
   std::vector<int>::iterator it;
   std::vector<int> position;
   int pos;
@@ -769,7 +804,7 @@ double PathFinder::edgelength(int e1, int e2) {
   return TMath::Sqrt((x1 - x0).Mag2());
 }
 
-void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > im) {
+void PathFinder::clean_pointpairs(const std::vector<std::pair<PathPoint, PathPoint> >& im) {
   // fill store of related_points, check for pathpoint overlaps and clean store
   // check
   // for (auto& rp : im) {
@@ -782,12 +817,14 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
   related_points.clear();
   std::vector<PathPoint> onhost;
   std::vector<PathPoint> onguest;
-  for (auto& rp : im) {
+  for (const auto& rp : im) {
     onhost.push_back(rp.first);  // keep order
     onguest.push_back(rp.second);
   }
   std::set<int> temp;
-  for (auto& pp : onhost) temp.insert(pp.pointid.first);  // unique hit ids
+  for (auto& pp : onhost) {
+    temp.insert(pp.pointid.first);  // unique hit ids
+  }
 
   std::set<std::pair<int, int> > mergehost;
   std::set<std::pair<int, int> > mergeguest;
@@ -811,7 +848,9 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
     }
   }
   temp.clear();
-  for (auto& pp : onguest) temp.insert(pp.pointid.first);  // unique hit ids
+  for (auto& pp : onguest) {
+    temp.insert(pp.pointid.first);  // unique hit ids
+  }
 
   for (int nn : temp) {
     std::vector<int> where = find_allint(onguest, (int)nn);  // ring hit id search
@@ -833,11 +872,11 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
     }
   }
   // now can modify intermediate container content
-  for (auto& mpair : mergehost) {
+  for (const auto& mpair : mergehost) {
     onhost.at(mpair.second) = onhost.at(mpair.first);  // target = which PathPoint
     //    std::cout << "h: overwrite nr " << mpair.second << " with " << mpair.first << std::endl;
   }
-  for (auto& mpair : mergeguest) {
+  for (const auto& mpair : mergeguest) {
     onguest.at(mpair.second) = onguest.at(mpair.first);  // target = which PathPoint
     //    std::cout << "g: overwrite nr " << mpair.second << " with " << mpair.first << std::endl;
   }
@@ -846,13 +885,13 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
   //  << onguest.size() << " sizes " << std::endl;
   std::set<std::pair<int, size_t> > node_cleaner;  // only unique entries
   for (unsigned int nn = 0; nn < im.size(); nn++) {
-    related_points.push_back(
-        std::make_pair(onhost.at(nn), onguest.at(nn)));  // stored all valid point pairs
-    node_cleaner.insert(onhost.at(nn).pointid);          // insert all nodes after overwrite
-    node_cleaner.insert(onguest.at(nn).pointid);         // without multiple entries
+    related_points.emplace_back(onhost.at(nn), onguest.at(nn));  // stored all valid point pairs
+    node_cleaner.insert(onhost.at(nn).pointid);                  // insert all nodes after overwrite
+    node_cleaner.insert(onguest.at(nn).pointid);                 // without multiple entries
   }
   std::vector<std::pair<int, size_t> > nodes;  // convenience node container by unique ids
-  for (auto& nd : node_cleaner) {
+  nodes.reserve(node_cleaner.size());
+  for (const auto& nd : node_cleaner) {
     nodes.push_back(nd);  // make nodes countable with index
     //    std::cout << " Got node : (" << nd.first << ", " << nd.second << ")" << std::endl;
   }
@@ -865,8 +904,8 @@ void PathFinder::clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > 
     int pos1 = itn - nodes.begin();
     itn = std::find(nodes.begin(), nodes.end(), rp.second.pointid);
     int pos2 = itn - nodes.begin();
-    edges.push_back(std::make_pair(pos1, pos2));  // edge integers map to ordered_point indices
-    ordered_points.at(pos1) = rp.first;           // insert PathPoint in node order
+    edges.emplace_back(pos1, pos2);       // edge integers map to ordered_point indices
+    ordered_points.at(pos1) = rp.first;   // insert PathPoint in node order
     ordered_points.at(pos2) = rp.second;  // make sure to capture all incl. overwriting if required
 
     // std::cout << "edges from id (" << nodes.at(pos1).first << "," << nodes.at(pos1).second << ")
@@ -886,9 +925,9 @@ void PathFinder::make_edges() {
   // fill tree with doubles by construction
   int nentries = (int)hits.size();
   int nneighbours = (nentries >= 8) ? 8 : nentries;
-  double* x = new double[nentries];  // kdTree needs arrays as input
-  double* y = new double[nentries];  // kdTree needs arrays as input
-  double* z = new double[nentries];  // kdTree needs arrays as input
+  auto* x = new double[nentries];  // kdTree needs arrays as input
+  auto* y = new double[nentries];  // kdTree needs arrays as input
+  auto* z = new double[nentries];  // kdTree needs arrays as input
 
   int counter = 0;
   for (auto& entry : hits) {               // as stored in hits, in order of hits
@@ -899,7 +938,7 @@ void PathFinder::make_edges() {
     counter++;
   }
 
-  TKDTreeID* hittree = new TKDTreeID(nentries, 3, 1);
+  auto* hittree = new TKDTreeID(nentries, 3, 1);
   // fill kdTree here
   hittree->SetData(0, x);
   hittree->SetData(1, y);
@@ -911,9 +950,9 @@ void PathFinder::make_edges() {
   TrackerHit start;   // to hold the starter hit
   TrackerHit target;  // to hold the target hit
 
-  double point[3];                         // needed for kdTree requests
-  double* dist = new double[nneighbours];  // check on nearest 8 neighbours in grid
-  int* indx = new int[nneighbours];        // where 8 is the maximum posible in a square grid
+  double point[3];                       // needed for kdTree requests
+  auto* dist = new double[nneighbours];  // check on nearest 8 neighbours in grid
+  int* indx = new int[nneighbours];      // where 8 is the maximum posible in a square grid
 
   allpairs.clear();
   for (counter = 0; counter < nentries; counter++) {
@@ -928,7 +967,7 @@ void PathFinder::make_edges() {
       if (is_neighbour(start, target)) {
         RelationalHit rh(start, target);
         //	std::cout << "pair made from " << start.mi.hitid << " and " << target.mi.hitid <<
-        //std::endl;
+        // std::endl;
         allpairs.push_back(rh);  // RH has internal edges with own indices
       }
     }
@@ -951,7 +990,7 @@ void PathFinder::make_edges() {
       pph.pointid.second = make_ahash(pph);  // overwrite local second id for global unique id
       PathPoint ppg = guestpp.at(iedge.second);
       ppg.pointid.second = make_ahash(ppg);  // overwrite local second id for global unique id
-      intermediate.push_back(std::make_pair(pph, ppg));
+      intermediate.emplace_back(pph, ppg);
     }
   }
   //  std::cout << "all edges before cleaning, size = " << intermediate.size() << std::endl;
@@ -985,7 +1024,9 @@ void PathFinder::find_paths() {
       whichcol--;
       nextcolumn = column_hits(whichcol);  // column whichcol for targets
     }
-    if (!nextcolumn.empty()) temptargets = nextcolumn;
+    if (!nextcolumn.empty()) {
+      temptargets = nextcolumn;
+    }
   }
   if (tempstarts.empty()) {
     int whichcol = 1;
@@ -994,14 +1035,20 @@ void PathFinder::find_paths() {
       whichcol++;
       nextcolumn = column_hits(whichcol);  // column whichcol for starts
     }
-    if (!nextcolumn.empty()) tempstarts = nextcolumn;
+    if (!nextcolumn.empty()) {
+      tempstarts = nextcolumn;
+    }
   }
 
   // permit only unique indices
   std::set<int> pathstarts;
   std::set<int> pathtargets;
-  for (int idx : tempstarts) pathstarts.insert(idx);    // get unique starts
-  for (int idx : temptargets) pathtargets.insert(idx);  // get unique targets
+  for (int idx : tempstarts) {
+    pathstarts.insert(idx);  // get unique starts
+  }
+  for (int idx : temptargets) {
+    pathtargets.insert(idx);  // get unique targets
+  }
 
   // check
   // std::cout << "Starts ids:" << std::endl;
@@ -1026,7 +1073,9 @@ void PathFinder::find_paths() {
         //        std::cout << "Reach " << t << " from " << s << std::endl;
         ppc.length = gr.dijkstraPaths(s, t);
         // std::cout << "direct length return: " << ppc.length << std::endl;
-        for (auto& pid : gr.path()) path.push_back(ordered_points.at(pid));  // fill with PathPoints
+        for (auto& pid : gr.path()) {
+          path.push_back(ordered_points.at(pid));  // fill with PathPoints
+        }
         // check
         // for (auto& op : path)
         //    std::cout << "ordered points on path: " << op.xc << ", " << op.yc << std::endl;
@@ -1040,9 +1089,10 @@ void PathFinder::find_paths() {
       //     std::cout << "id=" << pid << endl;
     }
   }
-  std::sort(paths.begin(), paths.end(), [](PathPointCollection ppc1, PathPointCollection ppc2) {
-    return (ppc1.length < ppc2.length);
-  });  // sort according to path length
+  std::sort(paths.begin(), paths.end(),
+            [](const PathPointCollection& ppc1, const PathPointCollection& ppc2) {
+              return (ppc1.length < ppc2.length);
+            });  // sort according to path length
 
   // check
   // for (auto& ppc : paths) {
@@ -1096,10 +1146,10 @@ void RelationalHit::create_maps() {
         //	std::cout << "create map: host trial[" << trial.from() << ", " << trial.to() << "]"
         //<< std::endl;
         if (ival.angle_overlap(trial)) {
-          merged.push_back(j);                           // not using this at later iteration
-          booked.push_back(i);                           // both i,j are replaced due to overlap
-          hostnode_map.push_back(std::make_pair(i, i));  // i guest tp for both, i,j
-          hostnode_map.push_back(std::make_pair(j, i));  // tangent points on host
+          merged.push_back(j);              // not using this at later iteration
+          booked.push_back(i);              // both i,j are replaced due to overlap
+          hostnode_map.emplace_back(i, i);  // i guest tp for both, i,j
+          hostnode_map.emplace_back(j, i);  // tangent points on host
           // std::cout << "create map: overlap edge (" << i << ", " << i << ") inserted." <<
           // std::endl; std::cout << "create map: and edge (" << j << ", " << i << ") inserted." <<
           // std::endl;
@@ -1131,19 +1181,19 @@ void RelationalHit::create_maps() {
           if (combined.to() - combiangle > TMath::Pi() / 4.0) {
             //	    std::cout << " host - extreme arc case " << std::endl;
             ROOT::Math::XYVector dxdy(rad, rad);  // dx, dy as size of ring
-            for (unsigned int n = 0; n < onthis.size(); n++)
-              onthis.at(n) = std::make_pair(hostanode, dxdy);  // anode position for all nodes
+            for (auto& onthi : onthis) {
+              onthi = std::make_pair(hostanode, dxdy);  // anode position for all nodes
+            }
             block = true;
             break;  // done, out
-          } else {
-            ROOT::Math::XYVector dxdy =
-                rphitoxy(tp, ROOT::Math::XYVector(host.gr.wirex, host.gr.wirey), rad, host.gr.rerr,
-                         combined.angle_dphi());      // returns dx, dy in vector
-            onthis.at(i) = std::make_pair(tp, dxdy);  // same according to map
-            onthis.at(j) = std::make_pair(tp, dxdy);
-            //	    std::cout << "host - overlap edge (" << j << ", " << i << ") inserted." <<
-            //std::endl;
           }
+          ROOT::Math::XYVector dxdy =
+              rphitoxy(tp, ROOT::Math::XYVector(host.gr.wirex, host.gr.wirey), rad, host.gr.rerr,
+                       combined.angle_dphi());      // returns dx, dy in vector
+          onthis.at(i) = std::make_pair(tp, dxdy);  // same according to map
+          onthis.at(j) = std::make_pair(tp, dxdy);
+          //	    std::cout << "host - overlap edge (" << j << ", " << i << ") inserted." <<
+          // std::endl;
         }
       }
       it = std::find(booked.begin(), booked.end(), i);
@@ -1153,9 +1203,9 @@ void RelationalHit::create_maps() {
                      host.gr.radius, host.gr.rerr, ival.angle_dphi());  // returns dx, dy in vector
         onthis.at(i) = std::make_pair(allhost_points.at(i), dxdy);
         booked.push_back(i);
-        hostnode_map.push_back(std::make_pair(i, i));  // host i has partner i as in allhost_pairs
+        hostnode_map.emplace_back(i, i);  // host i has partner i as in allhost_pairs
         //	std::cout << "host - create map: no overlap edge (" << i << ", " << i << ")
-        //inserted." << std::endl;
+        // inserted." << std::endl;
       }
     }
   }
@@ -1175,10 +1225,10 @@ void RelationalHit::create_maps() {
         //	std::cout << "create map: guest trial[" << trial.from() << ", " << trial.to() << "]"
         //<< std::endl;
         if (ival.angle_overlap(trial)) {
-          merged.push_back(j);                            // not using this at later iteration
-          booked.push_back(i);                            // both i,j are replaced due to overlap
-          guestnode_map.push_back(std::make_pair(i, i));  // i host tp for both, i,j
-          guestnode_map.push_back(std::make_pair(j, i));  // tangent points on guest
+          merged.push_back(j);               // not using this at later iteration
+          booked.push_back(i);               // both i,j are replaced due to overlap
+          guestnode_map.emplace_back(i, i);  // i host tp for both, i,j
+          guestnode_map.emplace_back(j, i);  // tangent points on guest
           // std::cout << "create map: overlap edge (" << i << ", " << i << ") inserted." <<
           // std::endl; std::cout << "create map: and edge (" << j << ", " << i << ") inserted." <<
           // std::endl;
@@ -1194,7 +1244,7 @@ void RelationalHit::create_maps() {
           if (sign1 < 0 && sign2 < 0) {
             combined = Interval(start, end);
             //	    std::cout << "guest New Hull interval: [" << combined.from() << ", " <<
-            //combined.to() << "]" << std::endl;
+            // combined.to() << "]" << std::endl;
             signx = -1;
           }
           double combiangle = combined.angle_midinterval();  // into one node
@@ -1207,19 +1257,19 @@ void RelationalHit::create_maps() {
           // capture extremely large arc for tiny rings
           if (combined.to() - combiangle > TMath::Pi() / 4.0) {
             ROOT::Math::XYVector dxdy(rad, rad);  // dx, dy as size of ring
-            for (unsigned int n = 0; n < onother.size(); n++)
-              onother.at(n) = std::make_pair(guestanode, dxdy);  // anode position for all nodes
+            for (auto& n : onother) {
+              n = std::make_pair(guestanode, dxdy);  // anode position for all nodes
+            }
             block = true;
             break;  // done, out
-          } else {
-            ROOT::Math::XYVector dxdy =
-                rphitoxy(tp, ROOT::Math::XYVector(guest.gr.wirex, guest.gr.wirey), rad,
-                         guest.gr.rerr, combined.angle_dphi());  // returns dx, dy in vector
-            onother.at(i) = std::make_pair(tp, dxdy);            // same according to map
-            onother.at(j) = std::make_pair(tp, dxdy);
-            //	    std::cout << "guest - overlap edge (" << j << ", " << i << ") inserted." <<
-            //std::endl;
           }
+          ROOT::Math::XYVector dxdy =
+              rphitoxy(tp, ROOT::Math::XYVector(guest.gr.wirex, guest.gr.wirey), rad, guest.gr.rerr,
+                       combined.angle_dphi());       // returns dx, dy in vector
+          onother.at(i) = std::make_pair(tp, dxdy);  // same according to map
+          onother.at(j) = std::make_pair(tp, dxdy);
+          //	    std::cout << "guest - overlap edge (" << j << ", " << i << ") inserted." <<
+          // std::endl;
         }
       }
       it = std::find(booked.begin(), booked.end(), i);
@@ -1229,9 +1279,9 @@ void RelationalHit::create_maps() {
             guest.gr.radius, guest.gr.rerr, ival.angle_dphi());  // returns dx, dy in vector
         onother.at(i) = std::make_pair(allguest_points.at(i), dxdy);
         booked.push_back(i);
-        guestnode_map.push_back(std::make_pair(i, i));  // guest i has partner i as in allhost_pairs
+        guestnode_map.emplace_back(i, i);  // guest i has partner i as in allhost_pairs
         //	std::cout << "guest - create map: no overlap edge (" << i << ", " << i << ")
-        //inserted." << std::endl;
+        // inserted." << std::endl;
       }
     }
   }
@@ -1257,7 +1307,6 @@ void RelationalHit::calculate_tangentpoints() {
     calculate_four(distance);
     calculate_four_errors(distance);
   }
-  return;
 }
 
 void RelationalHit::calculate_overlapping(double distance) {
@@ -1379,12 +1428,12 @@ void RelationalHit::calculate_overlapping_errors(double distance) {
     dxdy.push_back(l_pairs.at(1).second - s_pairs.at(0).first);  // l4-s1
     dxdy.push_back(l_pairs.at(2).first - s_pairs.at(2).second);  // l5-s6
     dxdy.push_back(l_pairs.at(2).second - s_pairs.at(2).first);  // l6-s5
-    centres.push_back(ROOT::Math::XYVector(intern.xb, intern.yb));
-    centres.push_back(ROOT::Math::XYVector(intern.xb, intern.yb));
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
+    centres.emplace_back(intern.xb, intern.yb);
+    centres.emplace_back(intern.xb, intern.yb);
+    centres.emplace_back(intern.xa, intern.ya);
+    centres.emplace_back(intern.xa, intern.ya);
+    centres.emplace_back(intern.xa, intern.ya);
+    centres.emplace_back(intern.xa, intern.ya);
   } else {
     xy.push_back(allhost_points.at(0));  // fix 1-6
     xy.push_back(allhost_points.at(1));
@@ -1399,12 +1448,12 @@ void RelationalHit::calculate_overlapping_errors(double distance) {
     dxdy.push_back(l_pairs.at(1).second - s_pairs.at(1).second);  // l4-s4
     dxdy.push_back(l_pairs.at(2).first - s_pairs.at(2).first);    // l5-s5
     dxdy.push_back(l_pairs.at(2).second - s_pairs.at(2).second);  // l6-s6
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-    centres.push_back(ROOT::Math::XYVector(intern.xb, intern.yb));
-    centres.push_back(ROOT::Math::XYVector(intern.xb, intern.yb));
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-    centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
+    centres.emplace_back(intern.xa, intern.ya);
+    centres.emplace_back(intern.xa, intern.ya);
+    centres.emplace_back(intern.xb, intern.yb);
+    centres.emplace_back(intern.xb, intern.yb);
+    centres.emplace_back(intern.xa, intern.ya);
+    centres.emplace_back(intern.xa, intern.ya);
   }
   std::vector<Interval> dphi = deltaxy_to_deltaphi(xy, dxdy, centres);
   if (intern.order < 1) {
@@ -1571,7 +1620,7 @@ void RelationalHit::calculate_four_errors(double distance) {
   std::vector<ROOT::Math::XYVector> xy;
   std::vector<ROOT::Math::XYVector> dxdy;
   std::vector<ROOT::Math::XYVector> centres;
-  if (intern.order) {
+  if (intern.order != 0) {
     xy.push_back(allguest_points.at(0));  // fix 1-4
     xy.push_back(allguest_points.at(1));
     xy.push_back(allhost_points.at(0));
@@ -1612,10 +1661,10 @@ void RelationalHit::calculate_four_errors(double distance) {
                      s_pairs.at(1).second);  // l4-s4 since XYVectors can subtract
     }
   }
-  centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-  centres.push_back(ROOT::Math::XYVector(intern.xa, intern.ya));
-  centres.push_back(ROOT::Math::XYVector(intern.xb, intern.yb));
-  centres.push_back(ROOT::Math::XYVector(intern.xb, intern.yb));
+  centres.emplace_back(intern.xa, intern.ya);
+  centres.emplace_back(intern.xa, intern.ya);
+  centres.emplace_back(intern.xb, intern.yb);
+  centres.emplace_back(intern.xb, intern.yb);
 
   std::vector<Interval> dphi = deltaxy_to_deltaphi(xy, dxdy, centres);
   //  std::cout << "four errors: done dphi, store TP_errors" << std::endl;
@@ -1649,9 +1698,8 @@ void RelationalHit::calculate_four_errors(double distance) {
   double ring_overlap = (intern.rlarge + intern.rsmall) - distance;
   if (ring_overlap >= 0.0) {  // no origin between rings if they overlap
     intersectioncalc(distance);
-    l_pairs.push_back(TP_pair);  // l1, l2 in here
-    l_pairs.push_back(
-        std::make_pair(TP_pair.second, TP_pair.first));  // swapped order of tp, l3, l4
+    l_pairs.push_back(TP_pair);                           // l1, l2 in here
+    l_pairs.emplace_back(TP_pair.second, TP_pair.first);  // swapped order of tp, l3, l4
   } else {
     // not overlapping on larger errors
     double ha = intern.rsmall * distance / (intern.rlarge + intern.rsmall);
@@ -1679,7 +1727,7 @@ void RelationalHit::calculate_four_errors(double distance) {
   pointcalc(intern.xb, intern.yb, intern.rlarge, hb, xo, yo);  // pair of points done
   s_pairs.push_back(TP_pair);                                  // s3, s4
 
-  if (intern.order) {
+  if (intern.order != 0) {
     xy.push_back(allguest_points.at(2));  // fix 1-4
     xy.push_back(allguest_points.at(3));
     xy.push_back(allhost_points.at(2));
@@ -1800,10 +1848,11 @@ void RelationalHit::intersectioncalc(double distance) {
 
 double RelationalHit::checkforpi(double angle) {
   double pi = TMath::Pi();
-  if (angle < -pi)
+  if (angle < -pi) {
     angle += 2.0 * pi;
-  else if (angle > pi)
+  } else if (angle > pi) {
     angle -= 2.0 * pi;
+  }
   return angle;
 }
 
@@ -1820,10 +1869,10 @@ int RelationalHit::checkforpihalf(double& angle) {
 }
 
 double RelationalHit::check_subtraction(double r, double dr) {
-  if ((r - dr) <= 0.0)
+  if ((r - dr) <= 0.0) {
     return r;
-  else
-    return r - dr;
+  }
+  { return r - dr; }
 }
 
 void RelationalHit::size_sorting() {
@@ -1889,31 +1938,32 @@ void RelationalHit::pointcalc(double xw, double yw, double rad, double h, double
   if (fabs(yw - yo) <= EPS) {
     calc_onhorizontal(xw, yw, rad, h, xo, yo);
     return;
-  } else if (fabs(xw - xo) <= EPS) {
+  }
+  if (fabs(xw - xo) <= EPS) {
     calc_onvertical(xw, yw, rad, h, xo, yo);
     return;
-  } else {  // normal calculation
-    double p2 = (yw - yo) * rad / (h * h) * TMath::Sqrt(h * h - rad * rad);
-    double x_1 = xw - rad * rad / (h * h) * (xw - xo) + p2;
-    double x_2 = xw - rad * rad / (h * h) * (xw - xo) - p2;
+  }  // normal calculation
+  double p2 = (yw - yo) * rad / (h * h) * TMath::Sqrt(h * h - rad * rad);
+  double x_1 = xw - rad * rad / (h * h) * (xw - xo) + p2;
+  double x_2 = xw - rad * rad / (h * h) * (xw - xo) - p2;
 
-    double denom1 = rad * rad + (x_1 - xw) * (xw - xo);
-    double denom2 = rad * rad + (x_2 - xw) * (xw - xo);
-    double y_1 = (xw * yw * xo - x_1 * (xo * yw + xw * (yw - 2.0 * yo)) + x_1 * x_1 * (yw - yo) +
-                  rad * rad * yo - xw * xw * yo) /
-                 denom1;
-    double y_2 = (xw * yw * xo - x_2 * (xo * yw + xw * (yw - 2.0 * yo)) + x_2 * x_2 * (yw - yo) +
-                  rad * rad * yo - xw * xw * yo) /
-                 denom2;
+  double denom1 = rad * rad + (x_1 - xw) * (xw - xo);
+  double denom2 = rad * rad + (x_2 - xw) * (xw - xo);
+  double y_1 = (xw * yw * xo - x_1 * (xo * yw + xw * (yw - 2.0 * yo)) + x_1 * x_1 * (yw - yo) +
+                rad * rad * yo - xw * xw * yo) /
+               denom1;
+  double y_2 = (xw * yw * xo - x_2 * (xo * yw + xw * (yw - 2.0 * yo)) + x_2 * x_2 * (yw - yo) +
+                rad * rad * yo - xw * xw * yo) /
+               denom2;
 
-    ROOT::Math::XYVector tp1(x_1, y_1);
-    ROOT::Math::XYVector tp2(x_2, y_2);
-    TP_pair = std::make_pair(tp1, tp2);  // result set, ready to store
-  }
+  ROOT::Math::XYVector tp1(x_1, y_1);
+  ROOT::Math::XYVector tp2(x_2, y_2);
+  TP_pair = std::make_pair(tp1, tp2);  // result set, ready to store
 }
 
-ROOT::Math::XYVector RelationalHit::rphitoxy(ROOT::Math::XYVector tp, ROOT::Math::XYVector ctr,
-                                             double r, double dr, double dphi) {
+ROOT::Math::XYVector RelationalHit::rphitoxy(const ROOT::Math::XYVector& tp,
+                                             const ROOT::Math::XYVector& ctr, double r, double dr,
+                                             double dphi) {
   double pih = TMath::Pi() / 2.0;
   double dx = 0.0;
   double dy = 0.0;
@@ -1923,8 +1973,12 @@ ROOT::Math::XYVector RelationalHit::rphitoxy(ROOT::Math::XYVector tp, ROOT::Math
   dy = fabs((r + dr) * TMath::Sin(theta + dphi) - r * TMath::Sin(theta));
   dx = fabs((r + dr) * TMath::Cos(theta + dphi) - r * TMath::Cos(theta));
 
-  if (dx < dr) dx = dr;  // set absolute minimal error in [mm]
-  if (dy < dr) dy = dr;  // set absolute minimal error in [mm]
+  if (dx < dr) {
+    dx = dr;  // set absolute minimal error in [mm]
+  }
+  if (dy < dr) {
+    dy = dr;  // set absolute minimal error in [mm]
+  }
 
   // std::cout << " dx = " << dx << std::endl;
   // std::cout << " dy = " << dy << std::endl;
@@ -1933,11 +1987,11 @@ ROOT::Math::XYVector RelationalHit::rphitoxy(ROOT::Math::XYVector tp, ROOT::Math
 }
 
 std::vector<Interval> RelationalHit::deltaxy_to_deltaphi(
-    std::vector<ROOT::Math::XYVector> xy, std::vector<ROOT::Math::XYVector> dxdy,
+    const std::vector<ROOT::Math::XYVector>& xy, std::vector<ROOT::Math::XYVector> dxdy,
     std::vector<ROOT::Math::XYVector> ctr) {  // conversion to error on ring
   std::vector<Interval> dphi;
   int counter = 0;
-  for (auto& dublet : xy) {
+  for (const auto& dublet : xy) {
     double p = TMath::ATan2(dublet.y() - ctr.at(counter).y(), dublet.x() - ctr.at(counter).x());
     // std::cout << "dxy to dphi: point and centre " << dublet.x() << " " << dublet.y() << "; " <<
     // ctr.at(counter).x() << " " << ctr.at(counter).y() << std::endl; std::cout << "dxy to dphi:
@@ -1965,40 +2019,50 @@ std::vector<Interval> RelationalHit::deltaxy_to_deltaphi(
 std::vector<std::pair<int, int> > RelationalHit::get_edges() {
   std::vector<int> firsts;
   std::vector<int>::iterator it;
-  for (auto& dublet : guestnode_map) firsts.push_back(dublet.first);
+  for (auto& dublet : guestnode_map) {
+    firsts.push_back(dublet.first);
+  }
 
   int from;
   int to;
-  int trial, idx;
+  int trial;
+  int idx;
   std::set<std::pair<int, int> > connections;
-  for (unsigned int i = 0; i < hostnode_map.size(); i++) {  // same size as guest map
-    from = hostnode_map.at(i).second;                       // starter host node
-    trial = hostnode_map.at(i).first;                       // intermediate
+  for (auto& i : hostnode_map) {  // same size as guest map
+    from = i.second;              // starter host node
+    trial = i.first;              // intermediate
     it = std::find(firsts.begin(), firsts.end(), trial);
-    if (it != firsts.end())       // if found
+    if (it != firsts.end()) {     // if found
       idx = it - firsts.begin();  // get the index
-    else
+    } else {
       continue;
+    }
     to = guestnode_map.at(idx).second;
     connections.insert(std::make_pair(from, to));  // store edge as unique index pair
   }
 
   firsts.clear();
-  for (auto& dublet : hostnode_map) firsts.push_back(dublet.first);
-  for (unsigned int i = 0; i < guestnode_map.size(); i++) {  // same size as guest map
-    from = guestnode_map.at(i).second;                       // starter host node
-    trial = guestnode_map.at(i).first;                       // intermediate
+  for (auto& dublet : hostnode_map) {
+    firsts.push_back(dublet.first);
+  }
+  for (auto& i : guestnode_map) {  // same size as guest map
+    from = i.second;               // starter host node
+    trial = i.first;               // intermediate
     it = std::find(firsts.begin(), firsts.end(), trial);
-    if (it != firsts.end())       // if found
+    if (it != firsts.end()) {     // if found
       idx = it - firsts.begin();  // get the index
-    else
+    } else {
       continue;
+    }
     to = hostnode_map.at(idx).second;
     connections.insert(std::make_pair(from, to));  // store edge as unique index pair
   }
 
   std::vector<std::pair<int, int> > edges;  // countable container
-  for (auto& cn : connections) edges.push_back(cn);
+  edges.reserve(connections.size());
+  for (const auto& cn : connections) {
+    edges.push_back(cn);
+  }
 
   // and transform nodes into node container, same order vector -> vector
   PathPoint pp;
@@ -2048,27 +2112,31 @@ Interval::Interval(double s, double e) {
   }
 }
 
-Interval Interval::hull(Interval other) {
+Interval Interval::hull(Interval other) const {
   double left;
   double right;
-  if (lower < other.from())
+  if (lower < other.from()) {
     left = lower;
-  else
+  } else {
     left = other.from();
-  if (upper > other.to())
+  }
+  if (upper > other.to()) {
     right = upper;
-  else
+  } else {
     right = other.to();
-  return Interval(left, right);
+  }
+  return {left, right};
 }
 
-bool Interval::overlap(Interval other) {
-  if (lower < other.from())
+bool Interval::overlap(Interval other) const {
+  if (lower < other.from()) {
     return upper > other.from();
-  else if (upper > other.to())
+  }
+  if (upper > other.to()) {
     return lower < other.to();
-  else
-    return true;  // this a subset
+  }
+
+  return true;  // this a subset
 }
 
 int Interval::checkforPiHalf(double& angle) {
@@ -2083,7 +2151,7 @@ int Interval::checkforPiHalf(double& angle) {
   return sign;
 }
 
-double Interval::angle_midinterval() {
+double Interval::angle_midinterval() const {
   // taking care of border at pi
   Interval temp(0, 0);
   double left = lower;  // subject to change
@@ -2099,7 +2167,7 @@ double Interval::angle_midinterval() {
   return 0.5 * (lower + upper);
 }
 
-double Interval::angle_dphi() {
+double Interval::angle_dphi() const {
   // taking care of border at pi
   double midpoint = angle_midinterval();
   bool swapped = false;
@@ -2115,7 +2183,7 @@ double Interval::angle_dphi() {
   return fabs(upper - midpoint);
 }
 
-bool Interval::angle_overlap(Interval other) {
+bool Interval::angle_overlap(Interval other) const {
   // std::cout << "Input interval: [" << lower << ", " << upper << "]" << std::endl;
   // std::cout << "compared to: [" << other.from() << ", " << other.to() << "]" << std::endl;
   Interval temp(0, 0);
@@ -2144,12 +2212,15 @@ bool Interval::angle_overlap(Interval other) {
   // if (swapped2)
   //   std::cout << "after check 2 for pi half: [" << otherleft << ", " << otherright << "]" <<
   //   std::endl;
-  if (swapped1 && swapped2)
+  if (swapped1 && swapped2) {
     return temp.overlap(tempo);
-  else if (swapped1 && !swapped2)
+  }
+  if (swapped1 && !swapped2) {
     return false;
-  else if (!swapped1 && swapped2)
+  }
+  if (!swapped1 && swapped2) {
     return false;
+  }
 
   return overlap(other);
 }
@@ -2178,12 +2249,16 @@ void WeightedGraph::addEdge(int v, int w, double weight) {
 // A BFS based function to check whether d is reachable from s.
 bool WeightedGraph::isReachable(int s, int d) {
   // Base case
-  if (s == d) return true;
+  if (s == d) {
+    return true;
+  }
 
   // Mark all the vertices as not visited
   bool* visited = new bool[V];
 
-  for (int i = 0; i < V; i++) visited[i] = false;
+  for (int i = 0; i < V; i++) {
+    visited[i] = false;
+  }
 
   // Create a queue for BFS
   std::list<int> queue;
@@ -2230,9 +2305,9 @@ double WeightedGraph::dijkstraPaths(int start, int target) {
   dist.clear();
   sPath.clear();
   int n = adjList.size();
-  for (int i = 0; i < n; i++)
-    dist.push_back(
-        std::make_pair(1000000007, i));  // Define "infinity" as necessary by constraints.
+  for (int i = 0; i < n; i++) {
+    dist.emplace_back(1000000007, i);  // Define "infinity" as necessary by constraints.
+  }
 
   // Create a PQ.
   std::priority_queue<std::pair<int, double>, std::vector<std::pair<int, double> >,
@@ -2245,7 +2320,7 @@ double WeightedGraph::dijkstraPaths(int start, int target) {
   ;
 
   // While pq isn't empty...
-  while (pq.empty() == false) {
+  while (!pq.empty()) {
     // Get min distance vertex from pq. (Call it u.)
     int u = pq.top().first;
     pq.pop();

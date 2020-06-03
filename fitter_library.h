@@ -116,7 +116,7 @@ class LineDistance2 {
   std::vector<GeigerRing>* frings;
 
  protected:
-  double linedistance(GeigerRing gr, const double* p);  // calculate distance line-cylinder
+  static double linedistance(GeigerRing gr, const double* p);  // calculate distance line-cylinder
 
  public:
   LineDistance2(std::vector<GeigerRing>* g) : frings(g) {}
@@ -140,7 +140,7 @@ class HelixDistance2 {
   std::vector<GeigerRing>* frings;
 
  protected:
-  double helixdistance(GeigerRing gr, const double* p);  // calculate distance helix-cylinder
+  static double helixdistance(GeigerRing gr, const double* p);  // calculate distance helix-cylinder
 
  public:
   HelixDistance2(std::vector<GeigerRing>* g) : frings(g) {}
@@ -335,21 +335,21 @@ class Interval {
   double upper;
 
  protected:
-  int checkforPiHalf(double& angle);  // on ring beyond pi/2 angle, get sign problems
+  static int checkforPiHalf(double& angle);  // on ring beyond pi/2 angle, get sign problems
 
  public:
   Interval();                    // Default Constructor
   Interval(double s, double e);  // Constructor with lower and upper limit
 
-  Interval hull(Interval other);  // return interval containing both this and other
+  Interval hull(Interval other) const;  // return interval containing both this and other
   double midinterval() { return 0.5 * (lower + upper); }  // mean interval value
-  double angle_midinterval();                             // mean angular interval value
-  double angle_dphi();                                    // half width with angles
+  double angle_midinterval() const;                       // mean angular interval value
+  double angle_dphi() const;                              // half width with angles
   double from() { return lower; }                         // boundary return
   double to() { return upper; }                           // boundary return
   bool empty() { return lower == upper; }                 // check for empty interval
-  bool overlap(Interval other);                           // return true if overlap exists
-  bool angle_overlap(Interval other);                     // for intervals on a circle
+  bool overlap(Interval other) const;                     // return true if overlap exists
+  bool angle_overlap(Interval other) const;               // for intervals on a circle
 };
 
 class RelationalHit {
@@ -401,14 +401,15 @@ class RelationalHit {
   void calc_onvertical(double xw, double yw, double rad, double h, double xo, double yo);
   void calc_onhorizontal(double xw, double yw, double rad, double h, double xo, double yo);
   // helpers
-  int checkforpihalf(double& angle);
-  double checkforpi(double angle);
-  double check_subtraction(double r, double dr);
-  std::vector<Interval> deltaxy_to_deltaphi(
-      std::vector<ROOT::Math::XYVector> xy, std::vector<ROOT::Math::XYVector> dxdy,
+  static int checkforpihalf(double& angle);
+  static double checkforpi(double angle);
+  static double check_subtraction(double r, double dr);
+  static std::vector<Interval> deltaxy_to_deltaphi(
+      const std::vector<ROOT::Math::XYVector>& xy, std::vector<ROOT::Math::XYVector> dxdy,
       std::vector<ROOT::Math::XYVector> ctr);  // conversion to error on ring
-  ROOT::Math::XYVector rphitoxy(ROOT::Math::XYVector tp, ROOT::Math::XYVector ctr, double r,
-                                double dr, double dphi);
+  static ROOT::Math::XYVector rphitoxy(const ROOT::Math::XYVector& tp,
+                                       const ROOT::Math::XYVector& ctr, double r, double dr,
+                                       double dphi);
 
  protected:
   void calculate_tangentpoints();
@@ -443,19 +444,19 @@ class PathFinder {
   std::vector<std::pair<PathPoint, PathPoint> > related_points;  // edge data points
   std::vector<RelationalHit> allpairs;
   // internal functions
-  bool overlap_x(PathPoint p1, PathPoint p2);
-  bool overlap_y(PathPoint p1, PathPoint p2);
+  static bool overlap_x(PathPoint p1, PathPoint p2);
+  static bool overlap_y(PathPoint p1, PathPoint p2);
   double edgelength(int e1, int e2);
-  std::vector<int> find_allint(std::vector<PathPoint> myvector, int pint);
-  size_t make_ahash(PathPoint pp);
+  static std::vector<int> find_allint(const std::vector<PathPoint>& myvector, int pint);
+  static size_t make_ahash(PathPoint pp);
   std::vector<int> column_hits(int col);
 
  protected:
   void make_edges();
   void find_paths();
-  void clean_pointpairs(std::vector<std::pair<PathPoint, PathPoint> > im);
-  bool has_overlap(PathPoint p1, PathPoint p2);
-  bool is_neighbour(TrackerHit start, TrackerHit target);
+  void clean_pointpairs(const std::vector<std::pair<PathPoint, PathPoint> >& im);
+  static bool has_overlap(PathPoint p1, PathPoint p2);
+  static bool is_neighbour(TrackerHit start, TrackerHit target);
 
  public:
   PathFinder(std::vector<TrackerHit> th);  // Constructor
@@ -474,10 +475,11 @@ class SNFitter {
   std::vector<double> line_initials(double frad);
   std::vector<double> helix_initials();
   std::vector<double> helixbackup();
-  std::vector<int> kink_finder(std::vector<double> betaangles, std::vector<double> errangles);
-  LineFit fitline2D(std::vector<PathPoint> data);
-  bool peak_alarm(std::vector<double> betaangles);
-  double martingale(double previous, double val, double alpha);
+  static std::vector<int> kink_finder(std::vector<double> betaangles,
+                                      std::vector<double> errangles);
+  static LineFit fitline2D(const std::vector<PathPoint>& data);
+  static bool peak_alarm(std::vector<double> betaangles);
+  static double martingale(double previous, double val, double alpha);
 
  public:
   SNFitter() {
