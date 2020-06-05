@@ -1,4 +1,5 @@
 #include <fitter_library.h>
+#include "SNFitter/SNFitterImpl.h"
 #include <vector>
 #include "catch.hpp"
 

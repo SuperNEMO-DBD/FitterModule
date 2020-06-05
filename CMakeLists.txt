@@ -13,16 +13,16 @@ find_package(ROOT REQUIRED Spectrum Minuit2 Minuit)
 include_directories(.)
 
 # Build a dynamic library from our sources
-add_library(Fitter SHARED fitter_module.h 
-		   fitter_library.h 
-		   fitter_library.cpp 
+add_library(Fitter SHARED fitter_module.h
+		   fitter_library.h
+		   fitter_library.cpp
 		   fitter_module.cpp)
 target_link_libraries(Fitter PUBLIC Falaise::FalaiseModule ${ROOT_LIBRARIES})
 
 # Build a dynamic library from our sources for algorithm only
 # required for testing executables.
 include_directories(${ROOT_INCLUDE_DIRS})
-add_library(FitAlgorithm SHARED fitter_library.h 
+add_library(FitAlgorithm SHARED fitter_library.h
 			  fitter_library.cpp)
 target_link_libraries(FitAlgorithm PUBLIC ${ROOT_LIBRARIES})
 
