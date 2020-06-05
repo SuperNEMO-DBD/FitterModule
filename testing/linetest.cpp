@@ -1,7 +1,6 @@
-#include "catch.hpp"
 #include <fitter_library.h>
 #include <vector>
-
+#include "catch.hpp"
 
 std::vector<TrackerHit> lineA() {
   // hard-coded image data provider
@@ -10,12 +9,12 @@ std::vector<TrackerHit> lineA() {
   GeigerRing ring;
   TrackerHit th;
   std::vector<TrackerHit> rings;
-  for (unsigned int j=0;j<9;j++) {
-    ring.rerr   = 0.9;
+  for (double j : xset) {
+    ring.rerr = 0.9;
     ring.zerr = 10.0;
     ring.radius = 10.0;
-    ring.wirex  = xset[j];
-    ring.wirey  = 15.5;
+    ring.wirex = j;
+    ring.wirey = 15.5;
     ring.zcoord = 1.0;
     th.gr = ring;
     rings.push_back(th);
@@ -23,7 +22,6 @@ std::vector<TrackerHit> lineA() {
 
   return rings;
 }
-
 
 std::vector<TrackerHit> lineB() {
   // hard-coded image data provider
@@ -32,12 +30,12 @@ std::vector<TrackerHit> lineB() {
   GeigerRing ring;
   TrackerHit th;
   std::vector<TrackerHit> rings;
-  for (unsigned int j=0;j<9;j++) {
-    ring.rerr   = 0.9;
+  for (double j : xset) {
+    ring.rerr = 0.9;
     ring.zerr = 11.0;
     ring.radius = 16.0;
-    ring.wirex  = xset[j];
-    ring.wirey  = 15.5;
+    ring.wirex = j;
+    ring.wirey = 15.5;
     ring.zcoord = 1.0;
     th.gr = ring;
     rings.push_back(th);
@@ -45,7 +43,6 @@ std::vector<TrackerHit> lineB() {
 
   return rings;
 }
-
 
 std::vector<TrackerHit> lineC() {
   // hard-coded image data provider
@@ -55,12 +52,12 @@ std::vector<TrackerHit> lineC() {
   GeigerRing ring;
   TrackerHit th;
   std::vector<TrackerHit> rings;
-  for (unsigned int j=0;j<9;j++) {
-    ring.rerr   = 0.9;
+  for (unsigned int j = 0; j < 9; j++) {
+    ring.rerr = 0.9;
     ring.zerr = 10.0;
     ring.radius = rset[j];
-    ring.wirex  = xset[j];
-    ring.wirey  = -352.0;
+    ring.wirex = xset[j];
+    ring.wirey = -352.0;
     ring.zcoord = 1.0;
     th.gr = ring;
     rings.push_back(th);
@@ -69,73 +66,62 @@ std::vector<TrackerHit> lineC() {
   return rings;
 }
 
-
-int check_lineA(){
+int check_lineA() {
   std::vector<TrackerHit> rings = lineA();
   SNFitter snf(rings);
   int fails = 0;
   std::vector<LineFit> res = snf.fitline();
-  for (LineFit lf : res) { // should contain 4 candidates
-    if (lf.status>0) // 4 chances to fail
+  for (LineFit lf : res) {  // should contain 4 candidates
+    if (lf.status > 0) {    // 4 chances to fail
       fails++;
+    }
   }
   return fails;
 }
 
-bool check_lineB(){
+bool check_lineB() {
   bool found = false;
   std::vector<TrackerHit> rings = lineB();
   SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline();
-  for (LineFit lf : res) { // should contain 4 candidates
-    if (lf.ixy>31.0 && lf.ixy<32.0) // for one: near 31.5 with small error
+  for (LineFit lf : res) {               // should contain 4 candidates
+    if (lf.ixy > 31.0 && lf.ixy < 32.0) {  // for one: near 31.5 with small error
       found = true;
+    }
   }
   return found;
 }
 
-
-bool check_lineC1(){
+bool check_lineC1() {
   bool found = false;
   std::vector<TrackerHit> rings = lineC();
   SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline();
-  for (LineFit lf : res) { // should contain 4 candidates
-    if (lf.slxy>0.0591 && lf.slxy<0.0592) // for two cases: near 0.0591x
+  for (LineFit lf : res) {                     // should contain 4 candidates
+    if (lf.slxy > 0.0591 && lf.slxy < 0.0592) {  // for two cases: near 0.0591x
       found = true;
+    }
   }
   return found;
 }
 
-
-bool check_lineC2(){
+bool check_lineC2() {
   bool large = false;
   std::vector<TrackerHit> rings = lineC();
   SNFitter snf(rings);
   std::vector<LineFit> res = snf.fitline();
-  for (LineFit lf : res) { // should contain 4 candidates
-    if (lf.chi2 >= 1.0e-6) // for all: less than 1.0e-6 in tests
+  for (LineFit lf : res) {  // should contain 4 candidates
+    if (lf.chi2 >= 1.0e-6) {  // for all: less than 1.0e-6 in tests
       large = true;
+    }
   }
   return large;
 }
 
+TEST_CASE("Line A", "[falaise][fitstatus]") { REQUIRE(check_lineA() == 0); }
 
+TEST_CASE("Line B", "[falaise][fitcheck]") { REQUIRE(check_lineB() == true); }
 
+TEST_CASE("Line C1", "[falaise][fitterslopes]") { REQUIRE(check_lineC1() == true); }
 
-TEST_CASE( "Line A", "[falaise][fitstatus]" ) {
-  REQUIRE( check_lineA() == 0 );
-}
-
-TEST_CASE( "Line B", "[falaise][fitcheck]" ) {
-  REQUIRE( check_lineB() == true );
-}
-
-TEST_CASE( "Line C1", "[falaise][fitterslopes]" ) {
-  REQUIRE( check_lineC1() == true );
-}
-
-TEST_CASE( "Line C2", "[falaise][fitterchi2]" ) {
-  REQUIRE( check_lineC2() == false );
-}
-
+TEST_CASE("Line C2", "[falaise][fitterchi2]") { REQUIRE(check_lineC2() == false); }

@@ -1,13 +1,12 @@
-#include "catch.hpp"
-#include <fitter_library.h>
-#include <TTreeReader.h>
 #include <TFile.h>
+#include <TTreeReader.h>
+#include <fitter_library.h>
 #include <vector>
-
+#include "catch.hpp"
 
 int readrun() {
   // input reader
-  TFile* ff = new TFile("../testing/idealline1000.root");
+  auto* ff = new TFile("../testing/idealline1000.root");
   TTreeReader reader("hit_tree", ff);
   // obtain all the required input data from file
   TTreeReaderValue<std::vector<double>> radius(reader, "radius");
@@ -26,14 +25,14 @@ int readrun() {
   std::vector<TrackerHit> rings;
   SNFitter snf;
   int endevent = reader.GetEntries(true);
-  for (int i=0; i<endevent; i++) { // event loop
-    reader.Next(); // all data available
-    for (unsigned int j=0;j<radius->size();j++) {
-      ring.rerr   = 0.9;
+  for (int i = 0; i < endevent; i++) {  // event loop
+    reader.Next();                      // all data available
+    for (unsigned int j = 0; j < radius->size(); j++) {
+      ring.rerr = 0.9;
       ring.zerr = 10.0;
       ring.radius = radius->at(j);
-      ring.wirex  = wirex->at(j);
-      ring.wirey  = wirey->at(j);
+      ring.wirex = wirex->at(j);
+      ring.wirey = wirey->at(j);
       ring.zcoord = wirez->at(j);
       mi.hitid = grid_id->at(j);
       mi.side = grid_side->at(j);
@@ -44,21 +43,14 @@ int readrun() {
       rings.push_back(th);
     }
     snf.setData(rings);
-    if (snf.fitbrokenline().empty())
+    if (snf.fitbrokenline().empty()) {
       counter++;
+    }
     rings.clear();
-  }    
+  }
   return counter;
 }
 
+int check_run() { return readrun(); }
 
-int check_run(){
-  return readrun();
-}
-
-
-
-TEST_CASE( "BrokenLine", "[falaise][brokenlinerun]" ) {
-  REQUIRE( check_run() == 2 );
-}
-
+TEST_CASE("BrokenLine", "[falaise][brokenlinerun]") { REQUIRE(check_run() == 2); }
