@@ -9,10 +9,10 @@
 # the dpp namespace or
 # the snemo::processing namespace
 [name="flreconstruct.plugins" type="flreconstruct::section"]
-plugins : string[1] = "Fitter"
-Fitter.directory : string = "@PROJECT_BINARY_DIR@"
+plugins : string[1] = "SNFitterModule"
+SNFitterModule.directory : string = "@PROJECT_BINARY_DIR@"
 
 # Must define "pipeline" as this is the module flreconstruct will use
 # Define the modules in the pipeline:
-[name="pipeline" type="fitter_module"]
+[name="pipeline" type="SNFitterModule"]
 # no parameter

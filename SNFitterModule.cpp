@@ -1,5 +1,42 @@
 // Ourselves:
-#include <fitter_module.h>
+/* Description:
+ *
+ *   Module for consolidating fitted clusters
+ *
+ * History:
+ *
+ */
+
+// - Falaise:
+#include "falaise/snemo/datamodels/data_model.h"
+#include "falaise/snemo/processing/module.h"
+#include "falaise/snemo/services/service_handle.h"
+#include "falaise/snemo/services/geometry.h"
+
+/// \brief Tracker consolidation module for fitted clusters
+class SNFitterModule {
+ public:
+  /// Constructor
+  SNFitterModule() = default;
+  SNFitterModule(const falaise::config::property_set &ps, datatools::service_manager &sp)
+      : geosvc_{sp} {}
+
+  /// Data record processing
+  falaise::processing::status process(datatools::things &data_);
+
+ private:
+  int eventCounter = 0;
+  std::string _TCD_label_ = snemo::datamodel::data_info::default_tracker_clustering_data_label();
+  std::string _TTD_label_ = snemo::datamodel::data_info::default_tracker_trajectory_data_label();
+
+  // geometry service
+  snemo::service_handle<snemo::geometry_svc> geosvc_;
+};
+
+// Register module with Falaise's plugin system on load
+FALAISE_REGISTER_MODULE(SNFitterModule)
+
+#include "SNFitter/SNFitter.h"
 
 // Standard library:
 #include <iostream>
@@ -11,7 +48,6 @@
 
 // falaise
 #include <falaise/snemo/datamodels/calibrated_data.h>
-#include <falaise/snemo/datamodels/data_model.h>
 #include <falaise/snemo/datamodels/tracker_clustering_data.h>
 #include <falaise/snemo/datamodels/tracker_trajectory.h>
 #include <falaise/snemo/datamodels/tracker_trajectory_data.h>
@@ -19,56 +55,9 @@
 #include "falaise/snemo/datamodels/base_trajectory_pattern.h"
 #include "falaise/snemo/datamodels/calibrated_calorimeter_hit.h"
 
-// Registration instantiation macro :
-DPP_MODULE_REGISTRATION_IMPLEMENT(fitter_module, "fitter_module")
-
-// Constructor :
-fitter_module::fitter_module(datatools::logger::priority logging_priority_)
-    : dpp::base_module(logging_priority_) {}
-
-// Destructor :
-fitter_module::~fitter_module() {
-  // MUST reset module at destruction because DPP is idiotic
-  reset();
-}
-
-void fitter_module::reset() {
-  _TTD_label_.clear();
-  eventCounter = 0;
-  this->_set_initialized(false);
-}
-
-void fitter_module::initialize(const datatools::properties &setup_,
-                               datatools::service_manager &service_manager_,
-                               dpp::module_handle_dict_type & /* module_dict_ */) {
-  DT_THROW_IF(this->is_initialized(), std::logic_error,
-              "Module 'Fitter' is already initialized ! ");
-
-  dpp::base_module::_common_initialize(setup_);
-
-  // Look for services
-  if (service_manager_.has("geometry")) {
-    const auto &GS = service_manager_.get<geomtools::geometry_service>("geometry");
-
-    // initialize geometry manager
-    //    std::cout << "Initialize geo manager " << std::endl;
-    geometry_manager_ = &GS.get_geom_manager();
-    DT_THROW_IF(!geometry_manager_, std::runtime_error,
-                "Null pointer to geometry manager return by geometry_service");
-  }
-
-  // check the label
-  _TTD_label_ = snemo::datamodel::data_info::default_tracker_trajectory_data_label();
-  _TCD_label_ = snemo::datamodel::data_info::default_tracker_clustering_data_label();
-
-  eventCounter = 0;
-  this->_set_initialized(true);
-}
 
 // Processing :
-dpp::base_module::process_status fitter_module::process(datatools::things &data_record_) {
-  DT_THROW_IF(!this->is_initialized(), std::logic_error, "Module 'Fitter' is not initialized !");
-
+ falaise::processing::status SNFitterModule::process(datatools::things &data_record_) {
   // Check input tracker clustering data //
   namespace sdm = snemo::datamodel;
 
@@ -76,10 +65,10 @@ dpp::base_module::process_status fitter_module::process(datatools::things &data_
   if (data_record_.has(_TCD_label_)) {
     the_cluster_data = &(data_record_.grab<sdm::tracker_clustering_data>(_TCD_label_));
     if (!the_cluster_data->has_solutions()) {
-      return dpp::base_module::PROCESS_INVALID;
+      return falaise::processing::status::PROCESS_INVALID;
     }
   } else {
-    return dpp::base_module::PROCESS_INVALID;
+    return falaise::processing::status::PROCESS_INVALID;
   }
 
   // Check output tracker trajectory data //
@@ -148,11 +137,10 @@ dpp::base_module::process_status fitter_module::process(datatools::things &data_
 
       // try to do something with the results
       // Line first
-      for (const LineFit& entry : lres) {
+      for (const LineFit &entry : lres) {
         if (entry.status > 1) {
           std::cout << "This line fit failed with status " << entry.status << std::endl;
-        }
-        else {
+        } else {
           std::cout << "Line fit: (status, chi2) " << entry.status << ", " << entry.chi2
                     << std::endl;
           std::cout << "slope, intercept in xy " << entry.slxy << ", " << entry.ixy << std::endl;
@@ -164,11 +152,10 @@ dpp::base_module::process_status fitter_module::process(datatools::things &data_
 
       // Helix
       std::cout << "*** Helix next ***" << std::endl;
-      for (const HelixFit& entry : hres) {
+      for (const HelixFit &entry : hres) {
         if (entry.status > 1) {
           std::cout << "This helix fit failed with status " << entry.status << std::endl;
-        }
-        else {
+        } else {
           std::cout << "Helix fit: (status, chi2) " << entry.status << ", " << entry.chi2
                     << std::endl;
           std::cout << "radius and pitch " << entry.radius << ", " << entry.pitch << std::endl;
@@ -182,11 +169,10 @@ dpp::base_module::process_status fitter_module::process(datatools::things &data_
 
       // Broken Line last
       std::cout << "*** Broken Line section next ***" << std::endl;
-      for (const BrokenLineFit& entry : bres) {
+      for (const BrokenLineFit &entry : bres) {
         if (entry.status > 1) {
           std::cout << "This broken line fit failed with status " << entry.status << std::endl;
-        }
-        else {
+        } else {
           LineFit lf = entry.linefit1;
           LineFit lf2 = entry.linefit2;
           if (lf2.chi2 < 0.0) {  // just one linefit, no break
@@ -215,5 +201,5 @@ dpp::base_module::process_status fitter_module::process(datatools::things &data_
   }
 
   eventCounter++;
-  return dpp::base_module::PROCESS_SUCCESS;
+  return falaise::processing::status::PROCESS_SUCCESS;
 }

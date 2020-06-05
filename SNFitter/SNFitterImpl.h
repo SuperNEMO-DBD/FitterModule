@@ -1,113 +1,12 @@
-#ifndef YR_SNFitter
-#define YR_SNFitter
+#ifndef SNFITTER_SNFITTERIMPL_H
+#define SNFITTER_SNFITTERIMPL_H
 
-// std libraries
-#include <utility>
-#include <vector>
+#include "SNFitter/DataProducts.h"
 
-// ROOT includes
+// ROOT
 #include <Math/Vector2D.h>
 #include <Math/Vector3D.h>
-#include <TMath.h>
 #include <TVector3.h>
-
-// data storage objects
-struct MetaInfo {
-  // uniquely tag a geiger hit
-  int hitid;
-  int side;
-  int row;
-  int column;
-};
-
-// tracker data storage
-struct GeigerRing {
-  double radius;
-  double wirex;
-  double wirey;
-  double zcoord;
-  double rerr;
-  double zerr;
-};
-
-// path point store
-struct PathPoint {
-  // just a 3D point with errors for simple fitting
-  std::pair<int, size_t> pointid;
-  double xc;
-  double yc;
-  double zc;
-  double errx;
-  double erry;
-  double errz;
-};
-
-// complete path storage
-struct PathPointCollection {
-  double length;  // path length in Euclidean metric
-  std::vector<PathPoint> path;
-};
-
-struct TrackerHit {
-  // full tracker hit info
-  // unique to each
-  int clid;
-  GeigerRing gr;
-  MetaInfo mi;
-};
-
-// line fit store, 4 parameter with errors
-struct LineFit {
-  // par
-  double ixy;
-  double slxy;
-  double ixz;
-  double slxz;
-  double errixy;
-  double errslxy;
-  double errixz;
-  double errslxz;
-  // fit diagnostics
-  double chi2;
-  double prob;
-  int status;
-  int clid;
-};
-
-// helix fit store, 5 parameter with errors
-struct HelixFit {
-  // par
-  double radius;
-  double pitch;
-  double xc;
-  double yc;
-  double zc;
-  double raderr;
-  double errpitch;
-  double errxc;
-  double erryc;
-  double errzc;
-  // fit diagnostics
-  double chi2;
-  double prob;
-  int status;
-  int clid;
-};
-
-// broken line fit store, 4 parameter with errors and break
-struct BrokenLineFit {
-  LineFit linefit1;              // has its own diagnostics
-  LineFit linefit2;              // could be empty
-  std::vector<int> breakpoints;  // first and last of interest
-  // fit diagnostics for full BL fit
-  std::vector<double> angles;
-  std::vector<PathPoint> path;
-  double length;  // path length in Euclidean metric
-  double chi2;
-  double prob;
-  int status;
-  int clid;
-};
 
 // function Object to be minimized
 class LineDistance2 {
@@ -463,43 +362,6 @@ class PathFinder {
 
   void create_paths();  // initialization for all calculations
   std::vector<PathPointCollection> allpaths() { return paths; }
-};
-
-// General fitter class with line and helix fitting methods
-class SNFitter {
- private:
-  std::vector<TrackerHit> rings;
-  std::vector<GeigerRing> grings;
-
- protected:
-  std::vector<double> line_initials(double frad);
-  std::vector<double> helix_initials();
-  std::vector<double> helixbackup();
-  static std::vector<int> kink_finder(std::vector<double> betaangles,
-                                      std::vector<double> errangles);
-  static LineFit fitline2D(const std::vector<PathPoint>& data);
-  static bool peak_alarm(std::vector<double> betaangles);
-  static double martingale(double previous, double val, double alpha);
-
- public:
-  SNFitter() {
-    rings.clear();
-    grings.clear();
-  }  // default Constructor
-  SNFitter(std::vector<TrackerHit> th) : rings(th) {
-    for (auto& hit : rings) grings.push_back(hit.gr);
-  }  // Constructor
-  ~SNFitter() { rings.clear(); }
-
-  void setData(std::vector<TrackerHit> th) {
-    rings.clear();
-    grings.clear();
-    rings = th;
-    for (auto& hit : rings) grings.push_back(hit.gr);
-  }
-  std::vector<LineFit> fitline();  // sets the data and operates
-  std::vector<HelixFit> fithelix();
-  std::vector<BrokenLineFit> fitbrokenline();
 };
 
 #endif
