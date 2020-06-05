@@ -44,58 +44,9 @@ target_include_directories(Catch INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/testing)
 
 include_directories(${ROOT_INCLUDE_DIRS})
 
-# add test executable
-add_executable(linetest testing/linetest.cpp)
-target_link_libraries(linetest PUBLIC Catch SNFitter ${ROOT_LIBRARIES})
+foreach(__testname linetest linefiletest helixtest rhtest pftest blfittest)
+  add_executable(${__testname} testing/${__testname}.cpp)
+  target_link_libraries(${__testname} PRIVATE Catch SNFitter ${ROOT_LIBRARIES})
 
-# add test executable
-add_executable(helixtest testing/helixtest.cpp)
-target_link_libraries(helixtest PUBLIC Catch SNFitter ${ROOT_LIBRARIES})
-
-# add test executable
-add_executable(rhtest testing/rhtest.cpp)
-target_link_libraries(rhtest PUBLIC Catch SNFitter ${ROOT_LIBRARIES})
-
-# add test executable
-add_executable(pftest testing/pftest.cpp)
-target_link_libraries(pftest PUBLIC Catch SNFitter ${ROOT_LIBRARIES})
-
-# add test executable
-add_executable(blfittest testing/blfittest.cpp)
-target_link_libraries(blfittest PUBLIC Catch SNFitter ${ROOT_LIBRARIES})
-
-# add test executable
-add_executable(linefiletest testing/linefiletest.cpp)
-target_link_libraries(linefiletest PUBLIC Catch SNFitter ${ROOT_LIBRARIES})
-
-
-# CTest comand
-add_test(NAME linetest
-  COMMAND linetest -s
-)
-
-# CTest comand
-add_test(NAME rhtest
-  COMMAND rhtest -s
-)
-
-# CTest comand
-add_test(NAME pftest
-  COMMAND pftest -s
-)
-
-# CTest comand
-add_test(NAME helixtest
-  COMMAND helixtest -s
-)
-
-# CTest comand
-add_test(NAME linefiletest
-  COMMAND linefiletest -s
-)
-
-# CTest comand
-add_test(NAME blfittest
-  COMMAND blfittest -s
-)
-
+  add_test(NAME ${__testname} COMMAND ${__testname} -s)
+endforeach()
