@@ -1,6 +1,6 @@
 #include <TFile.h>
 #include <TTreeReader.h>
-#include <fitter_library.h>
+#include "SNFitter/SNFitter.h"
 #include <vector>
 #include "catch.hpp"
 

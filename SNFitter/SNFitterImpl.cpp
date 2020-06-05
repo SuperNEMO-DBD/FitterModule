@@ -4,6 +4,7 @@
 #include "TKDTree.h"
 
 // std
+#include <list>
 #include <queue>
 #include <set>
 #include <valarray>
