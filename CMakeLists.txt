@@ -29,7 +29,7 @@ target_include_directories(SNFitter
 target_link_libraries(SNFitter PRIVATE ${ROOT_LIBRARIES})
 
 # Build the Falaise plugin
-add_library(SNFitterModule SHARED fitter_module.cpp)
+add_library(SNFitterModule SHARED SNFitterModule.cpp)
 target_link_libraries(SNFitterModule PRIVATE SNFitter Falaise::FalaiseModule)
 
 # Configure example pipeline script for use from the build dir
