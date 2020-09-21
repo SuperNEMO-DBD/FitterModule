@@ -130,7 +130,7 @@ FALAISE_REGISTER_MODULE(SNFitterModule)
             rings.emplace_back(TrackerHit{ncl, ring, mi});
 	}
       }
-      std::cout<<"***** NaN vec length: "<<rings.size()<<std::endl;
+      
       // ready to fit
       SNFitter snf{rings};
       std::vector<HelixFit> hres = snf.fithelix();
