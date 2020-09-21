@@ -122,13 +122,15 @@ FALAISE_REGISTER_MODULE(SNFitterModule)
 
       for (const auto &hit : gg_hits_col) {
         // work with geiger hits as members of a given cluster
-        GeigerRing ring{hit->get_r(), hit->get_x(),       hit->get_y(),
+	if ( !std::isnan(hit->get_r()) ){ //take into account NaN radii: discard them
+            GeigerRing ring{hit->get_r(), hit->get_x(), hit->get_y(),
                         hit->get_z(), hit->get_sigma_r(), hit->get_sigma_z()};
-        MetaInfo mi{hit->get_id(), hit->get_side(), hit->get_row(), hit->get_layer()};
+            MetaInfo mi{hit->get_id(), hit->get_side(), hit->get_row(), hit->get_layer()};
 
-        rings.emplace_back(TrackerHit{ncl, ring, mi});
+            rings.emplace_back(TrackerHit{ncl, ring, mi});
+	}
       }
-
+      
       // ready to fit
       SNFitter snf{rings};
       std::vector<HelixFit> hres = snf.fithelix();
